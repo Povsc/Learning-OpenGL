@@ -12,13 +12,6 @@ class Shader {
 public:
 	unsigned int ID;
 
-	Shader(const char* vertexPath, const char* fragmentPath);
-	void use();
-	void setBool(const std::string& name, bool value) const;
-	void setInt(const std::string& name, int value) const;
-	void setFloat(const std::string& name, float value) const;
-
-private:
 	Shader(const char* vertexPath, const char* fragmentPath) {
 		std::string vertexCode;
 		std::string fragmentCode;
@@ -45,7 +38,7 @@ private:
 			std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ\n";
 		}
 		const char* vShaderCode = vertexCode.c_str();
-		const char* fShaderCode = vertexCode.c_str();
+		const char* fShaderCode = fragmentCode.c_str();
 
 		// Create and dynamically compile vertex shader
 		unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
@@ -89,6 +82,7 @@ private:
 		glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
 	}
 
+private:
 	void checkCompilation(unsigned int shader, std::string type) {
 		// Check for compilation errors
 		int success;
