@@ -11,9 +11,15 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void loadTexture(unsigned int* ID, const char* path);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+float lastX = 400.0f, lastY = 300.0f; // why even initialize?
+bool firstMouse = true;
+float camSpeed = 5.0f;
+const float camSpeedMax = 100.0f, camSpeedMin = 0.5f;
 
 float lastFrame = 0.0f;
 float deltaTime = 0.0f;
@@ -21,6 +27,8 @@ float deltaTime = 0.0f;
 glm::vec3 camPos = glm::vec3(0.0, 0.0, 3.0);
 glm::vec3 camFront = glm::vec3(0.0, 0.0, -1.0);
 glm::vec3 camUp = glm::vec3(0.0, 1.0, 0.0);
+float yaw = -89.0f;
+float pitch = 0.0f;
 
 // Weird way (?) to force computer to use NVIDIA or AMD dedicated GPU
 extern "C"
@@ -52,6 +60,9 @@ int main() {
 	// Actually open window
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 
 	// Texture stuff
 	unsigned int texture1, texture2;
@@ -197,15 +208,65 @@ void processInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
-	float cameraSpeed = 5.0f * deltaTime;
+	float movementSpeed = camSpeed * deltaTime;
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camPos += cameraSpeed * camFront;
+		camPos += movementSpeed * camFront;
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camPos -= cameraSpeed * camFront;
+		camPos -= movementSpeed * camFront;
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+		camPos -= movementSpeed * camUp;
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+		camPos += movementSpeed * camUp;
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camPos += cameraSpeed * glm::normalize(glm::cross(camUp, camFront));
+		camPos += movementSpeed * glm::normalize(glm::cross(camUp, camFront));
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camPos -= cameraSpeed * glm::normalize(glm::cross(camUp, camFront));
+		camPos -= movementSpeed * glm::normalize(glm::cross(camUp, camFront));
+
+	// is this how I should do it?
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
+		// do stuff
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glfwSetCursorPosCallback(window, mouse_callback);
+	}
+	else {
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		glfwSetCursorPosCallback(window, nullptr);
+		firstMouse = true;
+	}
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+	if (firstMouse) {
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+	float sensitivity = 0.1f;
+	float xOffset = (xpos - lastX) * sensitivity;
+	float yOffset = (lastY - ypos) * sensitivity;
+	lastX = xpos;
+	lastY = ypos;
+	
+	yaw += xOffset;
+	pitch += yOffset;
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+	
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	camFront = glm::normalize(direction);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+	camSpeed += yoffset;
+	if (camSpeed > camSpeedMax)
+		camSpeed = camSpeedMax;
+	if (camSpeed < camSpeedMin)
+		camSpeed = camSpeedMin;
 }
 
 void loadTexture(unsigned int* ID, const char* path) {
