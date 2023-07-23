@@ -15,6 +15,13 @@ void loadTexture(unsigned int* ID, const char* path);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+float lastFrame = 0.0f;
+float deltaTime = 0.0f;
+
+glm::vec3 camPos = glm::vec3(0.0, 0.0, 3.0);
+glm::vec3 camFront = glm::vec3(0.0, 0.0, -1.0);
+glm::vec3 camUp = glm::vec3(0.0, 1.0, 0.0);
+
 // Weird way (?) to force computer to use NVIDIA or AMD dedicated GPU
 extern "C"
 {
@@ -112,48 +119,50 @@ int main() {
 	glm::vec3(1.5f,  0.2f, -1.5f),
 	glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
-
-
+				   
+				   
 	// Vertex Buffer Object, Element Buffer Object, and Vertex Array Object
 	unsigned int VAO, VBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	// bind VAO first
 	glBindVertexArray(VAO);
-
+				   
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glEnable(GL_DEPTH_TEST);
-
+				   
 	// Tell OpenGL how to interpret vertex data in vertex buffer
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-
+				   
 	while (!glfwWindowShouldClose(window)) {
-		// input
+		// input   
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
 		processInput(window);
-
+				   
 		// rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+				   
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 		shaderProgram.use();
-
+				   
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
-		glm::mat4 view = glm::mat4(1.0f);
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+		glm::mat4 view = glm::lookAt(camPos, camPos + camFront, camUp);
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-
+				   
 		shaderProgram.setMat4("view", view);
 		shaderProgram.setMat4("projection", projection);
-
+				   
 		glBindVertexArray(VAO);
 		for (unsigned int i = 0; i < 10; i++) {
 			glm::mat4 model = glm::mat4(1.0f);
@@ -187,6 +196,16 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 void processInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+
+	float cameraSpeed = 5.0f * deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camPos += cameraSpeed * camFront;
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camPos -= cameraSpeed * camFront;
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camPos += cameraSpeed * glm::normalize(glm::cross(camUp, camFront));
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camPos -= cameraSpeed * glm::normalize(glm::cross(camUp, camFront));
 }
 
 void loadTexture(unsigned int* ID, const char* path) {
