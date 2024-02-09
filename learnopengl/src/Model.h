@@ -86,7 +86,7 @@ private:
 
 		// traverse through children if they exist
 		if (node.find("children") != node.end()) {
-			for (int i = 0; i < node["children"].size(); i++) {
+			for (unsigned int i = 0; i < node["children"].size(); i++) {
 				traverseNode(node["children"][i], matNextNode);
 			}
 		}
@@ -111,10 +111,10 @@ private:
 		std::vector<float> floats;
 
 		// Get properties from accessor
-		unsigned int buffViewInd = JSON["accessors"].value("buffView", 1);
-		unsigned int accByteOffset = JSON["accessors"].value("byteOffset", 0);
-		unsigned int count = JSON["accessors"]["count"];
-		std::string type = JSON["accessors"]["type"];
+		unsigned int buffViewInd = JSON["accessors"][accessorID].value("bufferView", 1);
+		unsigned int accByteOffset = JSON["accessors"][accessorID].value("byteOffset", 0);
+		unsigned int count = JSON["accessors"][accessorID]["count"];
+		std::string type = JSON["accessors"][accessorID]["type"];
 
 		// Get properties from the bufferview
 		json bufferView = JSON["bufferViews"][buffViewInd];
@@ -145,10 +145,10 @@ private:
 		std::vector<unsigned int> indices;
 
 		// Get properties from accessor
-		unsigned int buffViewInd = JSON["accessors"].value("buffView", 0);
-		unsigned int accByteOffset = JSON["accessors"].value("byteOffset", 0);
-		unsigned int count = JSON["accessors"]["count"];
-		unsigned int type = JSON["accessors"]["componentType"];
+		unsigned int buffViewInd = JSON["accessors"][accessorID].value("bufferView", 1);
+		unsigned int accByteOffset = JSON["accessors"][accessorID].value("byteOffset", 0);
+		unsigned int count = JSON["accessors"][accessorID]["count"];
+		unsigned int type = JSON["accessors"][accessorID]["componentType"];
 		// componentTypes can be: 5125 -> uint; 5123 -> ushort; 5122 -> short
 
 		// Get properties from the bufferview
@@ -229,7 +229,7 @@ private:
 	std::vector<glm::vec2> groupFloatsVec2(std::vector<float> floats) {
 		std::vector<glm::vec2> vectors;
 
-		for (int i = 0; i < floats.size(), i) {
+		for (int i = 0; i < floats.size(); i) {
 			vectors.push_back(glm::vec2(floats[i++], floats[i++]));
 		}
 		
@@ -239,7 +239,7 @@ private:
 	std::vector<glm::vec3> groupFloatsVec3(std::vector<float> floats) {
 		std::vector<glm::vec3> vectors;
 
-		for (int i = 0; i < floats.size(), i) {
+		for (int i = 0; i < floats.size(); i) {
 			vectors.push_back(glm::vec3(floats[i++], floats[i++], floats[i++]));
 		}
 
