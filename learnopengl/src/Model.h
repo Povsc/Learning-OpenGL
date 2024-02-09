@@ -35,7 +35,6 @@ private:
 	std::vector<unsigned char> data;
 
 	std::vector<Mesh> meshes;
-	//std::vector<glm::mat4> matrices; ERASE??????????????????????????
 
 	void loadMesh(unsigned int indMesh, glm::mat4 matrix) {
 		// get accessor indices
@@ -80,7 +79,6 @@ private:
 
 		// load mesh if it exists
 		if (node.find("mesh") != node.end()) {
-			//matrices.push_back(matNextNode); ERASE????????????????
 			loadMesh(node["mesh"], matNextNode);
 		}
 
@@ -111,14 +109,16 @@ private:
 		std::vector<float> floats;
 
 		// Get properties from accessor
-		unsigned int buffViewInd = JSON["accessors"][accessorID].value("bufferView", 1);
-		unsigned int accByteOffset = JSON["accessors"][accessorID].value("byteOffset", 0);
+		unsigned int buffViewInd = JSON["accessors"][accessorID].value("bufferView", 0);
+		unsigned int byteOffset = JSON["accessors"][accessorID].value("byteOffset", 0);
 		unsigned int count = JSON["accessors"][accessorID]["count"];
 		std::string type = JSON["accessors"][accessorID]["type"];
 
-		// Get properties from the bufferview
-		json bufferView = JSON["bufferViews"][buffViewInd];
-		unsigned int byteOffset = bufferView["byteOffset"];
+		// Get properties from the bufferview if it exists
+		if (buffViewInd != 0) {
+			json bufferView = JSON["bufferViews"][buffViewInd];
+			byteOffset += bufferView["byteOffset"];
+		}
 
 		// Interpret type
 		unsigned int dim;
@@ -129,9 +129,8 @@ private:
 		else throw std::invalid_argument("INVALID TYPE: must be scalar, vec2, vec3, or vec4");
 
 		// Get bytes from data
-		unsigned int beginning = accByteOffset + byteOffset;
 		unsigned int length = count * 4 * dim;
-		for (int i = beginning; i < beginning + length; i) {
+		for (int i = byteOffset; i < byteOffset + length; i) {
 			unsigned char bytes[] = { data[i++], data[i++], data[i++], data[i++] }; // little-endian?
 			float val;
 			std::memcpy(&val, bytes, sizeof(float));
@@ -145,20 +144,21 @@ private:
 		std::vector<unsigned int> indices;
 
 		// Get properties from accessor
-		unsigned int buffViewInd = JSON["accessors"][accessorID].value("bufferView", 1);
-		unsigned int accByteOffset = JSON["accessors"][accessorID].value("byteOffset", 0);
+		unsigned int buffViewInd = JSON["accessors"][accessorID].value("bufferView", 0);
+		unsigned int byteOffset = JSON["accessors"][accessorID].value("byteOffset", 0);
 		unsigned int count = JSON["accessors"][accessorID]["count"];
 		unsigned int type = JSON["accessors"][accessorID]["componentType"];
 		// componentTypes can be: 5125 -> uint; 5123 -> ushort; 5122 -> short
 
-		// Get properties from the bufferview
-		json bufferView = JSON["bufferViews"][buffViewInd];
-		unsigned int byteOffset = bufferView["byteOffset"];
-		unsigned int beginning = accByteOffset + byteOffset;
+		// Get properties from the bufferview if it exists
+		if (buffViewInd != 0) {
+			json bufferView = JSON["bufferViews"][buffViewInd];
+			byteOffset += bufferView["byteOffset"];
+		}
 
 		switch (type) {
 		case 5125: //unsigned int 
-			for (int i = beginning; i < beginning + count * 4; i) 
+			for (int i = byteOffset; i < byteOffset + count * 4; i)
 			{
 				unsigned char bytes[] = { data[i++], data[i++], data[i++], data[i++] }; // little-endian?
 				unsigned int val;
@@ -167,7 +167,7 @@ private:
 			}
 			break;
 		case 5123:
-			for (int i = beginning; i < beginning + count * 2; i)
+			for (int i = byteOffset; i < byteOffset + count * 2; i)
 			{
 				unsigned char bytes[] = { data[i++], data[i++] }; // little-endian?
 				unsigned short val;
@@ -176,7 +176,7 @@ private:
 			}
 			break;
 		case 5122:
-			for (int i = beginning; i < beginning + count * 2; i)
+			for (int i = byteOffset; i < byteOffset + count * 2; i)
 			{
 				unsigned char bytes[] = { data[i++], data[i++] }; // little-endian?
 				short val;
