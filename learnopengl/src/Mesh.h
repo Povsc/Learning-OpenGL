@@ -32,13 +32,16 @@ public:
 	// properties
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
-	std::vector<Texture> textures;
+	//std::vector<Texture> textures;
+	glm::mat4 model;
+
 	unsigned int VAO;
 
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures) {
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, glm::mat4 model = glm::mat4(1.0f)) {
 		this->indices = indices;
-		this->textures = textures;
+		//this->textures = textures;
 		this->vertices = vertices;
+		this->model = model;
 
 		unsigned int VBO, EBO;
 		// create VAO/VBO/EBO
@@ -68,6 +71,7 @@ public:
 		// TODO: figure out textures/bind uniforms (most of the code here really)
 		// TODO: figure out shaders (prob similar to textures)
 
+		shader.setMat4("model", this->model);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	}
