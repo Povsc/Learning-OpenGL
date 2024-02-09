@@ -170,8 +170,8 @@ private:
 
 		// Get bytes from data
 		unsigned int length = count * 4 * dim;
-		for (int i = byteOffset; i < byteOffset + length; i) {
-			unsigned char bytes[] = { data[i++], data[i++], data[i++], data[i++] }; // little-endian?
+		for (int i = byteOffset; i < byteOffset + length; i += 4) {
+			unsigned char bytes[] = { data[i], data[i + 1], data[i + 2], data[i + 3] }; // little-endian?
 			float val;
 			std::memcpy(&val, bytes, sizeof(float));
 			floats.push_back(val);
@@ -199,27 +199,27 @@ private:
 
 		switch (type) {
 		case 5125: // unsigned int 
-			for (int i = byteOffset; i < byteOffset + count * 4; i)
+			for (int i = byteOffset; i < byteOffset + count * 4; i += 4)
 			{
-				unsigned char bytes[] = { data[i++], data[i++], data[i++], data[i++] }; // little-endian?
+				unsigned char bytes[] = { data[i], data[i + 1], data[i + 2], data[i + 3] }; // little-endian?
 				unsigned int val;
 				std::memcpy(&val, bytes, sizeof(unsigned int));
 				indices.push_back(val);
 			}
 			break;
 		case 5123: // unsigned short
-			for (int i = byteOffset; i < byteOffset + count * 2; i)
+			for (int i = byteOffset; i < byteOffset + count * 2; i += 2)
 			{
-				unsigned char bytes[] = { data[i++], data[i++] };
+				unsigned char bytes[] = { data[i], data[i + 1] };
 				unsigned short val;
 				std::memcpy(&val, bytes, sizeof(unsigned short));
 				indices.push_back(val);
 			}
 			break;
 		case 5122: // short
-			for (int i = byteOffset; i < byteOffset + count * 2; i)
+			for (int i = byteOffset; i < byteOffset + count * 2; i += 2)
 			{
-				unsigned char bytes[] = { data[i++], data[i++] };
+				unsigned char bytes[] = { data[i], data[i + 1] };
 				short val;
 				std::memcpy(&val, bytes, sizeof(short));
 				indices.push_back(val);
@@ -270,8 +270,8 @@ private:
 	std::vector<glm::vec2> groupFloatsVec2(std::vector<float> floats) {
 		std::vector<glm::vec2> vectors;
 
-		for (int i = 0; i < floats.size(); i) {
-			vectors.push_back(glm::vec2(floats[i++], floats[i++]));
+		for (int i = 0; i < floats.size(); i += 2) {
+			vectors.push_back(glm::vec2(floats[i], floats[i + 1]));
 		}
 		
 		return vectors;
@@ -280,8 +280,8 @@ private:
 	std::vector<glm::vec3> groupFloatsVec3(std::vector<float> floats) {
 		std::vector<glm::vec3> vectors;
 
-		for (int i = 0; i < floats.size(); i) {
-			vectors.push_back(glm::vec3(floats[i++], floats[i++], floats[i++]));
+		for (int i = 0; i < floats.size(); i += 3) {
+			vectors.push_back(glm::vec3(floats[i], floats[i + 1], floats[i + 2]));
 		}
 
 		return vectors;
