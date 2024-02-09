@@ -1,6 +1,8 @@
 #pragma once
 #include <json/json.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 
 #include "Mesh.h"
 #include <iostream>
@@ -10,7 +12,7 @@ using json = nlohmann::json;
 class Model
 {
 public:
-	Model(const char *file) {
+	Model(const char* file) {
 		// create json
 		std::string text = readFile(file);
 		JSON = json::parse(text);
@@ -23,7 +25,7 @@ public:
 		traverseNode(0);
 	}
 
-	void Draw(Shader &shader) {
+	void Draw(Shader& shader) {
 		for (Mesh mesh : meshes) {
 			mesh.Draw(shader);
 		}
@@ -45,7 +47,7 @@ private:
 		// use indices to get all components
 		std::vector<float> flPos = getFloats(posAcc);
 		std::vector<float> flTex = getFloats(texAcc);
-		
+
 
 		// group components
 		std::vector<glm::vec3> positions = groupFloatsVec3(flPos);
@@ -69,13 +71,51 @@ private:
 			float matValues[16];
 			for (int i = 0; i < node["matrix"].size(); i++) {
 				matValues[i] = node["matrix"][i];
-				matNode = glm::make_mat4(matValues);
 			}
+			matNode = glm::make_mat4(matValues);
+		}
+		
+		// array to store values 
+		float values[4];
+
+		//get translation if it exists
+		glm::vec3 translation = glm::vec3(0.0f);
+		if (node.find("translation") != node.end()) {
+			for (unsigned int i = 0; i < node["translation"].size(); i++) {
+				values[i] = node["translation"][i];
+			}
+			translation = glm::make_vec3(values);
 		}
 
-		// TODO: do same for translation/rotation/scale
+		//get scale if it exists
+		glm::vec3 scale = glm::vec3(1.0f);
+		if (node.find("scale") != node.end()) {
+			for (unsigned int i = 0; i < node["scale"].size(); i++) {
+				values[i] = node["scale"][i];
+			}
+			scale = glm::make_vec3(values);
+		}
 
-		glm::mat4 matNextNode = matrix * matNode;
+		//get rotation if it exists
+		glm::quat quaternion = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+		if (node.find("rotation") != node.end()) {
+			for (unsigned int i = 0; i < node["rotation"].size(); i++) {
+				values[(i + 3) % 4] = node["rotation"][i]; // mod stuff to account for diff order of components
+			}
+			quaternion = glm::make_quat(values);
+		}
+
+		// initialize matrices
+		glm::mat4 trans = glm::mat4(1.0f);
+		glm::mat4 sca = glm::mat4(1.0f);
+
+		// apply transformations
+		trans = glm::translate(trans, translation);
+		glm::mat4 rot = glm::mat4_cast(quaternion);
+		sca = glm::scale(sca, scale);
+
+
+		glm::mat4 matNextNode = trans * rot * sca * matrix * matNode;
 
 		// load mesh if it exists
 		if (node.find("mesh") != node.end()) {
