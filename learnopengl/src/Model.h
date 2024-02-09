@@ -147,8 +147,9 @@ private:
 		unsigned int buffViewInd = JSON["accessors"][accessorID].value("bufferView", 0);
 		unsigned int byteOffset = JSON["accessors"][accessorID].value("byteOffset", 0);
 		unsigned int count = JSON["accessors"][accessorID]["count"];
-		unsigned int type = JSON["accessors"][accessorID]["componentType"];
+
 		// componentTypes can be: 5125 -> uint; 5123 -> ushort; 5122 -> short
+		unsigned int type = JSON["accessors"][accessorID]["componentType"];
 
 		// Get properties from the bufferview if it exists
 		if (buffViewInd != 0) {
@@ -157,7 +158,7 @@ private:
 		}
 
 		switch (type) {
-		case 5125: //unsigned int 
+		case 5125: // unsigned int 
 			for (int i = byteOffset; i < byteOffset + count * 4; i)
 			{
 				unsigned char bytes[] = { data[i++], data[i++], data[i++], data[i++] }; // little-endian?
@@ -166,19 +167,19 @@ private:
 				indices.push_back(val);
 			}
 			break;
-		case 5123:
+		case 5123: // unsigned short
 			for (int i = byteOffset; i < byteOffset + count * 2; i)
 			{
-				unsigned char bytes[] = { data[i++], data[i++] }; // little-endian?
+				unsigned char bytes[] = { data[i++], data[i++] };
 				unsigned short val;
 				std::memcpy(&val, bytes, sizeof(unsigned short));
 				indices.push_back(val);
 			}
 			break;
-		case 5122:
+		case 5122: // short
 			for (int i = byteOffset; i < byteOffset + count * 2; i)
 			{
-				unsigned char bytes[] = { data[i++], data[i++] }; // little-endian?
+				unsigned char bytes[] = { data[i++], data[i++] };
 				short val;
 				std::memcpy(&val, bytes, sizeof(short));
 				indices.push_back(val);
