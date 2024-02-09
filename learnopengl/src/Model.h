@@ -25,9 +25,9 @@ public:
 		traverseNode(0);
 	}
 
-	void Draw(Shader& shader) {
+	void Draw(Shader& shader, glm::mat4 view, glm::mat4 projection) {
 		for (Mesh mesh : meshes) {
-			mesh.Draw(shader);
+			mesh.Draw(shader, view, projection);
 		}
 	}
 
@@ -35,7 +35,6 @@ private:
 	const char* file;
 	json JSON;
 	std::vector<unsigned char> data;
-
 	std::vector<Mesh> meshes;
 
 	void loadMesh(unsigned int indMesh, glm::mat4 matrix) {

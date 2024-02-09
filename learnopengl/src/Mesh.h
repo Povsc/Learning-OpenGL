@@ -26,7 +26,7 @@ struct Texture
 	std::string type; // TODO: decide on an actual way to do this/ change this to an ENUM
 };
 
-class Mesh
+class Mesh // TODO: make destructor to delete VBO/VAO/EBO? Good idea?
 {
 public:
 	// properties
@@ -67,11 +67,14 @@ public:
 		glBindVertexArray(0); // Don't really need to "unbind" this 
 	}
 
-	void Draw(Shader &shader) {
+	void Draw(Shader &shader, glm::mat4 view, glm::mat4 projection) {
 		// TODO: figure out textures/bind uniforms (most of the code here really)
 		// TODO: figure out shaders (prob similar to textures)
 
-		shader.setMat4("model", this->model);
+		shader.use();
+		// precompute MVP
+		glm::mat4 MVP = projection * view * this->model;
+		shader.setMat4("MVP", MVP);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	}
