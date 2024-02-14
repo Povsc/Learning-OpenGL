@@ -17,8 +17,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+unsigned int SCR_WIDTH = 800;
+unsigned int SCR_HEIGHT = 600;
 float lastX, lastY; // why even initialize?
 bool firstMouse = true;
 
@@ -96,6 +96,10 @@ int main() {
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
+
+	// Allow perspective matrix to update aspect ratio
+	SCR_HEIGHT = height;
+	SCR_WIDTH = width;
 
 	// updates frames while resizing window requires multithreading
 }
