@@ -42,19 +42,22 @@ private:
 		unsigned int posAcc = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["POSITION"];
 		unsigned int texAcc = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["TEXCOORD_0"]; // what happens when I need more UVs?
 		unsigned int indAcc = JSON["meshes"][indMesh]["primitives"][0]["indices"];
+		unsigned int norAcc = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["NORMAL"];
 
 		// use indices to get all components
 		std::vector<float> flPos = getFloats(posAcc);
 		std::vector<float> flTex = getFloats(texAcc);
+		std::vector<float> flNor = getFloats(norAcc);
 
 
 		// group components
 		std::vector<glm::vec3> positions = groupFloatsVec3(flPos);
 		std::vector<glm::vec2> texCoords = groupFloatsVec2(flTex);
+		std::vector<glm::vec3> normals = groupFloatsVec3(flNor);
 
 		// combine into Mesh
 		std::vector<unsigned int> indices = getIndices(indAcc);
-		std::vector<Vertex> vertices = assembleVertices(positions, texCoords);
+		std::vector<Vertex> vertices = assembleVertices(positions, texCoords, normals);
 
 		// make meshes
 		meshes.push_back(Mesh(vertices, indices, matrix));
@@ -233,13 +236,14 @@ private:
 
 	// TODO: Accessor for textures
 
-	std::vector<Vertex> assembleVertices(std::vector<glm::vec3> position, std::vector < glm::vec2> TexCoords) {
+	std::vector<Vertex> assembleVertices(std::vector<glm::vec3> position, std::vector < glm::vec2> TexCoords, std::vector<glm::vec3> normal) {
 		std::vector<Vertex> vertices;
 		Vertex vertex;
 
 		for (int i = 0; i < position.size(); i++) {
 			vertex.Position = position[i];
 			vertex.TexCoords = TexCoords[i];
+			vertex.Normal = normal[i];
 			vertices.push_back(vertex);
 		}
 

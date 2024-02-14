@@ -11,9 +11,9 @@ struct Vertex
 {
 	glm::vec3 Position;
 	glm::vec2 TexCoords;
+	glm::vec3 Normal;
 	// Probably adding these later on
 	// 
-	//glm::vec3 Normal;
 	//glm::vec3 Tangent;
 	//glm::vec3 Bitangent;
 	//bone stuff for animation?
@@ -62,6 +62,8 @@ public:
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
 		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
+		glEnableVertexAttribArray(2);
 		// TODO: Add extra vertex info (normals, etc)
 
 		glBindVertexArray(0); // Don't really need to "unbind" this 
