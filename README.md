@@ -35,6 +35,8 @@ Repo for tracking progress through basics of OpenGL and graphics programming.
     - [ ] Render texture data
     - [ ] Render skeletal animations
     - [ ] Allow for custom shaders
+    - [ ] Custom file format for faster loading
+- [ ] Scene loading
 
 
 ----
