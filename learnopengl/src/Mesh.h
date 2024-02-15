@@ -23,7 +23,7 @@ struct Texture
 {
 	unsigned int id;
 	std::string filepath;
-	std::string type; // TODO: decide on an actual way to do this/ change this to an ENUM
+	std::string type; // Provisory types: diffuse, specular, normal, height
 };
 
 class Mesh // TODO: make destructor to delete VBO/VAO/EBO? Good idea?
@@ -32,14 +32,14 @@ public:
 	// properties
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
-	//std::vector<Texture> textures;
+	std::vector<Texture> textures;
 	glm::mat4 model;
 
 	unsigned int VAO;
 
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, glm::mat4 model = glm::mat4(1.0f)) {
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, glm::mat4 model = glm::mat4(1.0f)) {
 		this->indices = indices;
-		//this->textures = textures;
+		this->textures = textures;
 		this->vertices = vertices;
 		this->model = model;
 
@@ -70,8 +70,40 @@ public:
 	}
 
 	void Draw(Shader &shader, glm::mat4 view, glm::mat4 projection) {
-		// TODO: figure out textures/bind uniforms (most of the code here really)
 		// TODO: figure out shaders (prob similar to textures)
+
+		// bind appropriate textures abiding by our provisory texture types
+		unsigned short diffuseCount = 1;
+		unsigned short specularCount = 1;
+		unsigned short normalCount = 1;
+		unsigned short heightCount = 1;
+
+		for (unsigned short i = 0; i < textures.size(); i++) {
+			std::string name = textures[i].type.c_str();
+			std::string number;
+
+			if (name == "diffuse") {
+				number = std::to_string(diffuseCount++);
+			}
+			else if (name == "specular") {
+				number = std::to_string(specularCount++);
+			}
+			else if (name == "normal") {
+				number = std::to_string(normalCount++);
+			}
+			else if (name == "height") {
+				number = std::to_string(heightCount++);
+			}
+
+			// activate texture
+			glActiveTexture(GL_TEXTURE0 + i);
+
+			// now set the sampler to the correct texture unit
+			glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), 0);
+
+			// and finally bind the texture
+			glBindTexture(GL_TEXTURE_2D, textures[i].id);
+		}
 
 		shader.use();
 		// precompute MVP

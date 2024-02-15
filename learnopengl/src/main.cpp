@@ -12,7 +12,6 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
-void loadTexture(unsigned int* ID, const char* path);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
@@ -63,12 +62,12 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 
 	// Shader setup
-	Shader shaderProgram("shaders/model.vert", "shaders/model.frag");
+	Shader shaderProgram("shaders/texture.vert", "shaders/texture.frag");
 
 	// Test models
-	//Model ourModel("assets/gltf/real-time_bones_demo_phoenix_bird/scene.gltf");
-	//Model ourModel("assets/gltf/dusty_old_bookshelf_free/scene.gltf");
-	Model ourModel("assets/gltf/survival_guitar_backpack/scene.gltf");
+	//Model ourModel("assets/gltf/real-time_bones_demo_phoenix_bird/");
+	//Model ourModel("assets/gltf/dusty_old_bookshelf_free/");
+	Model ourModel("assets/gltf/survival_guitar_backpack/");
 				   
 	while (!glfwWindowShouldClose(window)) {
 		// input   
@@ -149,26 +148,4 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	camera.ProcessMouseScroll(yoffset);
-}
-
-void loadTexture(unsigned int* ID, const char* path) {
-	glGenTextures(1, ID);
-	glBindTexture(GL_TEXTURE_2D, *ID);
-	// TODO: Add options to tweak parameters (do I need to redo it everytime?)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	int width, height, nrChannels;
-	stbi_set_flip_vertically_on_load(true);
-	unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
-	if (data) {
-		GLint channels = (nrChannels == 4) ? GL_RGBA : GL_RGB; // works for now
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, channels, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else {
-		std::cout << "Failed to load texture at path " << path << std::endl;
-	}
-	stbi_image_free(data); // free image memory
 }

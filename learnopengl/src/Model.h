@@ -9,16 +9,23 @@
 
 using json = nlohmann::json;
 
+struct TexToLoad {
+	unsigned int texID;
+	const char* type;
+};
+
 class Model
 {
 public:
-	Model(const char* file) {
+	Model(const char* directory) {
 		// create json
+		this->directory = directory;
+		std::string fileStr = directory + std::string("scene.gltf");
+		const char* file = fileStr.c_str();
 		std::string text = readFile(file);
 		JSON = json::parse(text);
 
 		// get bin data
-		this->file = file;
 		data = getData();
 
 		// begin recurse
@@ -32,10 +39,11 @@ public:
 	}
 
 private:
-	const char* file;
+	const char* directory;
 	json JSON;
 	std::vector<unsigned char> data;
 	std::vector<Mesh> meshes;
+	std::vector<Texture> texturesLoaded;
 
 	void loadMesh(unsigned int indMesh, glm::mat4 matrix) {
 		// get accessor indices
@@ -43,12 +51,13 @@ private:
 		unsigned int texAcc = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["TEXCOORD_0"]; // what happens when I need more UVs?
 		unsigned int indAcc = JSON["meshes"][indMesh]["primitives"][0]["indices"];
 		unsigned int norAcc = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["NORMAL"];
+		unsigned int matAcc = JSON["meshes"][indMesh]["primitives"][0].value("material", 0);
 
 		// use indices to get all components
 		std::vector<float> flPos = getFloats(posAcc);
 		std::vector<float> flTex = getFloats(texAcc);
 		std::vector<float> flNor = getFloats(norAcc);
-
+		std::vector<Texture> textures = getTextures(matAcc);
 
 		// group components
 		std::vector<glm::vec3> positions = groupFloatsVec3(flPos);
@@ -60,7 +69,7 @@ private:
 		std::vector<Vertex> vertices = assembleVertices(positions, texCoords, normals);
 
 		// make meshes
-		meshes.push_back(Mesh(vertices, indices, matrix));
+		meshes.push_back(Mesh(vertices, indices, textures, matrix));
 	}
 
 	void traverseNode(unsigned int nextNode, glm::mat4 matrix = glm::mat4(1.0f)) {
@@ -138,9 +147,7 @@ private:
 		std::string uri = JSON["buffers"][0]["uri"];
 
 		// store raw text
-		std::string fileStr = std::string(file);
-		std::string fileDirectory = fileStr.substr(0, fileStr.find_last_of('/') + 1);
-		bytesText = readFile((fileDirectory + uri).c_str());
+		bytesText = readFile((this->directory + uri).c_str());
 
 		// transform raw text data into bytes and put in vector
 		std::vector<unsigned char> data(bytesText.begin(), bytesText.end());
@@ -168,7 +175,7 @@ private:
 		else if (type == "VEC2") dim = 2;
 		else if (type == "VEC3") dim = 3;
 		else if (type == "VEC4") dim = 4;
-		else throw std::invalid_argument("INVALID TYPE: must be scalar, vec2, vec3, or vec4");
+		else throw std::invalid_argument("INVALID TYPE: must be scalar, vec2, vec3, or vec4\n");
 
 		// Get bytes from data
 		unsigned int length = count * 4 * dim;
@@ -228,13 +235,197 @@ private:
 			}
 			break;
 		default:
-			throw std::invalid_argument("INVALID TYPE: must be uint, ushort, or short");
+			throw std::invalid_argument("INVALID TYPE: must be uint, ushort, or short\n");
+			break;
 		}
 
 		return indices;
 	}
 
-	// TODO: Accessor for textures
+	/* TODO: Cover more cases!
+	Very incomplete function, only getting base color texture, but can easily expand to also allow for other textures
+	(e.g. normal, specular), as well as different TEXCOORD mappings. Also where PBR information is stored. Doesn't make 
+	sense to make this too robust right now, but can easily be improved in the future. */
+	std::vector<Texture> getTextures(unsigned int accessorID) {
+		// store textures/texture info
+		std::vector<TexToLoad> toLoad;
+		std::vector<Texture> textures;
+
+		// Get Texture IDs
+		// base color texture is stored in PBR for some reason
+		unsigned int baseColorID = JSON["materials"][accessorID]["pbrMetallicRoughness"]["baseColorTexture"]["index"];
+		TexToLoad baseColor;
+		baseColor.texID = baseColorID;
+		baseColor.type = "diffuse";
+		toLoad.push_back(baseColor);
+
+		// TODO: Add more potential texture types
+
+		unsigned int pathID;
+		unsigned int sampID;
+		for (TexToLoad tex : toLoad) { // right now this loop is silly because we're only retrieving one texture per mesh
+			// get image path
+			unsigned int pathID = JSON["textures"][tex.texID]["source"];
+			int sampID = JSON["textures"][tex.texID].value("sampler", -1);
+			std::string path = this->directory + JSON["images"][pathID].value("uri", ""); // not sure why this is preventing from crashing
+			//const char* path = pathStr.c_str();
+
+			// check if texture is already loaded
+			bool skip = false;
+			for (Texture texture : texturesLoaded) {
+				if (std::strcmp(path.data(), texture.filepath.data()) == 0) {
+					textures.push_back(texture);
+					skip = true;
+					break;
+				}
+			}
+			if (!skip) { // load it if not
+				Texture texture;
+				texture.id = loadTexture(path.c_str(), sampID);
+				texture.filepath = path;
+				texture.type = "diffuse";
+				texturesLoaded.push_back(texture);
+				textures.push_back(texture);
+			}
+		}
+		return textures;
+	}
+
+	unsigned int loadTexture(const char* path, int sampID) {
+		GLenum magFilter;
+		GLenum minFilter;
+		GLenum WrapS;
+		GLenum WrapT;
+
+		// get parameters from sampler if sampler ID exists
+		if (sampID != -1) {
+			// get image wrap/filtering options
+			unsigned int iMagFilter = JSON["samplers"][sampID].value("magFilter", 9729);
+			unsigned int iMinFilter = JSON["samplers"][sampID].value("minFilter", 9987);
+			unsigned int iWrapS = JSON["samplers"][sampID].value("wrapS", 10497);
+			unsigned int iWrapT = JSON["samplers"][sampID].value("wrapT", 10497);
+
+			// get magFilter;
+			switch (iMagFilter) {
+			case 9728:
+				magFilter = GL_NEAREST;
+				break;
+			case 9729:
+				magFilter = GL_LINEAR;
+				break;
+			default:
+				throw std::invalid_argument("ERROR: could not retrieve magFilter\n");
+				break;
+			}
+
+			// get minFilter
+			switch (iMinFilter) {
+			case 9728:
+				minFilter = GL_NEAREST;
+				break;
+			case 9729:
+				minFilter = GL_LINEAR;
+				break;
+			case 9984:
+				minFilter = GL_NEAREST_MIPMAP_NEAREST;
+				break;
+			case 9985:
+				minFilter = GL_LINEAR_MIPMAP_NEAREST;
+				break;
+			case 9986:
+				minFilter = GL_LINEAR_MIPMAP_NEAREST;
+				break;
+			case 9987:
+				minFilter = GL_LINEAR_MIPMAP_LINEAR;
+				break;
+			default:
+				throw std::invalid_argument("ERROR: could not retrieve minFilter\n");
+				break;
+			}
+
+			// get WrapS
+			switch (iWrapS) {
+			case 33071:
+				WrapS = GL_CLAMP_TO_EDGE;
+				break;
+			case 33648:
+				WrapS = GL_MIRRORED_REPEAT;
+				break;
+			case 10497:
+				WrapS = GL_REPEAT;
+				break;
+			default:
+				throw std::invalid_argument("ERROR: could not retrieve WarpS\n");
+				break;
+			}
+
+			// get WrapT
+			switch (iWrapT) {
+			case 33071:
+				WrapT = GL_CLAMP_TO_EDGE;
+				break;
+			case 33648:
+				WrapT = GL_MIRRORED_REPEAT;
+				break;
+			case 10497:
+				WrapT = GL_REPEAT;
+				break;
+			default:
+				throw std::invalid_argument("ERROR: could not retrieve WrapT\n");
+				break;
+			}
+		}
+		else {
+			magFilter = GL_LINEAR;
+			minFilter = GL_LINEAR_MIPMAP_LINEAR;
+			WrapS = GL_REPEAT;
+			WrapT = GL_REPEAT;
+		}
+
+		// generate texture
+		unsigned int ID;
+		glGenTextures(1, &ID);
+
+		//stbi_set_flip_vertically_on_load(true); 
+
+		// retrieve data
+		int width, height, nrChannels;
+		unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
+		if (data) {
+			GLint channels;
+			switch (nrChannels) { // retrieve number of channels
+			case 1:
+				channels = GL_RED;
+				break;
+			case 3:
+				channels = GL_RGB;
+				break;
+			case 4:
+				channels = GL_RGBA;
+				break;
+			default:
+				throw std::invalid_argument("INVALID NUMBER OF IMAGE CHANNELS: must be 1, 3, or 4\n");
+				break;
+			}
+
+			// bind texture
+			glBindTexture(GL_TEXTURE_2D, ID);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, channels, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+
+			// set texture parameters
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrapS);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, WrapT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+		}
+		else {
+			std::cout << "Failed to load texture at path " << path << std::endl;
+		}
+		// free loaded image
+		stbi_image_free(data); // free image memory
+		return ID;
+	}
 
 	std::vector<Vertex> assembleVertices(std::vector<glm::vec3> position, std::vector < glm::vec2> TexCoords, std::vector<glm::vec3> normal) {
 		std::vector<Vertex> vertices;
@@ -266,7 +457,7 @@ private:
 			return tstream.str();
 		}
 		catch (std::ifstream::failure e) {
-			std::cout << "ERROR::MODEL_LOADING::FILE_NOT_SUCCESSFULLY_READ\n";
+			std::cout << "ERROR::MODEL_LOADING::FILE_NOT_SUCCESSFULLY_READ\n" << file << std::endl;
 		}
 	}
 
