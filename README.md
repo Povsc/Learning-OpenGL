@@ -7,20 +7,13 @@ Repo for tracking progress through basics of OpenGL and graphics programming.
 ----
 ## Progress
 
-> Hello Triangle
+The performance of the system are very encouraging both in identification and verification:
 
-<img src="https://github.com/Povsc/learnopengl/assets/73599216/4be0f11b-ca06-4e4e-bd79-f41a59ad2880" width="300" heigh="450">
-
-
-> Textures and "animation"
-
-<img src="https://github.com/Povsc/learnopengl/assets/73599216/229d32cf-1080-4954-8c15-35c4237f0db9" width="300" heigh="450">
-
-
-> Model-loading (geometry only)
-
-<img src="https://github.com/Povsc/learnopengl/assets/73599216/e1f3313e-f52b-4b9e-a3bc-ad77eba92139" width="300" heigh="450">
-
+| <img src="https://github.com/Povsc/learnopengl/assets/73599216/4be0f11b-ca06-4e4e-bd79-f41a59ad2880" width="300" heigh="450"> | <img src="https://github.com/Povsc/learnopengl/assets/73599216/229d32cf-1080-4954-8c15-35c4237f0db9" width="300" heigh="450"> | <img src="https://github.com/Povsc/learnopengl/assets/73599216/e1f3313e-f52b-4b9e-a3bc-ad77eba92139" width="300" heigh="450"> |
+| :--------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------: |
+| Hello Triangle | Camera movement and "animation" | glTF2 Model-loading (geometry only) |
+| <img src="https://github.com/Povsc/Learning-OpenGL/assets/73599216/bda762ca-5ac5-4de3-adc7-3db12e328858" width="300" heigh="450"> |  |   |
+| glTF2 Model-loading with textures |   |   |
 
 ----
 <!-- ROADMAP -->
@@ -32,7 +25,7 @@ Repo for tracking progress through basics of OpenGL and graphics programming.
 - [ ] Add ImGUI
 - [ ] Model Loading (glTF)
     - [x] Render geometry data
-    - [ ] Render texture data
+    - [x] Render texture data
     - [ ] Render skeletal animations
     - [ ] Allow for custom shaders
     - [ ] Custom file format for faster loading
