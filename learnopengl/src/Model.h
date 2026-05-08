@@ -14,12 +14,15 @@ struct TexToLoad {
 	const char* type;
 };
 
+// TODO: most of these methods need to pass by (const) reference
+// TODO: Need a global pos and maybe rotation of this object
+
 class Model
 {
 public:
-	Model(const char* directory) {
-		// create json
-		this->directory = directory;
+	Model(const char* directory) :
+		directory(directory)
+	{
 		std::string fileStr = directory + std::string("scene.gltf");
 		const char* file = fileStr.c_str();
 		std::string text = readFile(file);
@@ -32,11 +35,28 @@ public:
 		traverseNode(0);
 	}
 
-	void Draw(Shader& shader, glm::mat4 view, glm::mat4 projection) {
-		for (Mesh mesh : meshes) {
+	void Draw(const Shader& shader, glm::mat4 view, glm::mat4 projection) const {
+		for (const Mesh& mesh : meshes) {
 			mesh.Draw(shader, view, projection);
 		}
 	}
+
+	void updateGloablPosAndScale(glm::vec3 pos, glm::vec3 scale) {
+		pos = pos;
+		scale = scale;
+
+		glm::mat4 groupScale = glm::scale(glm::mat4(1.0f), scale);
+		glm::mat4 groupTranslate = glm::translate(glm::mat4(1.0f), pos);
+		glm::mat4 groupMatrix = groupTranslate * groupScale; // Scale first, then translate
+
+		for (auto& mesh : meshes) {
+			mesh.model = groupMatrix * mesh.model;
+		}
+	}
+
+	glm::vec3 pos;
+	glm::vec3 scale{1, 1, 1};
+	//glm::vec3 name; TODO
 
 private:
 	const char* directory;
@@ -432,7 +452,7 @@ private:
 		Vertex vertex;
 
 		for (int i = 0; i < position.size(); i++) {
-			vertex.Position = position[i];
+			vertex.Position = (position[i] + pos) * scale;
 			vertex.TexCoords = TexCoords[i];
 			vertex.Normal = normal[i];
 			vertices.push_back(vertex);

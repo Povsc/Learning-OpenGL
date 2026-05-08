@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <stb_image.h>
+#include<unordered_set>
 
 #include <iostream>
 #include "Shader.h"
@@ -61,13 +62,22 @@ int main() {
 	// OpenGL global parameters
 	glEnable(GL_DEPTH_TEST);
 
+	// TODO: add shader lookup in asset folder? that would lead to a lot of repeated files?
+	// might be good enough for now. and have this as fallback? might be best to work on 
+	// lighting first
+
 	// Shader setup
-	Shader shaderProgram("shaders/texture.vert", "shaders/texture.frag");
+	const Shader shaderProgram("shaders/texture.vert", "shaders/texture.frag");
 
 	// Test models
-	//Model ourModel("assets/gltf/real-time_bones_demo_phoenix_bird/");
-	//Model ourModel("assets/gltf/dusty_old_bookshelf_free/");
-	Model ourModel("assets/gltf/survival_guitar_backpack/");
+	std::vector<Model> models;
+	models.emplace_back("assets/gltf/real-time_bones_demo_phoenix_bird/");
+	models.emplace_back("assets/gltf/dusty_old_bookshelf_free/");
+	models.emplace_back("assets/gltf/survival_guitar_backpack/");
+
+	// DELETE AFTER: JUST FOR TESTING
+	models[0].updateGloablPosAndScale(glm::vec3(5, 2, 0), glm::vec3(0.01, 0.01, 0.01));
+	models[2].updateGloablPosAndScale(glm::vec3(-5, 0, 0), glm::vec3(0.01, 0.01, 0.01));
 				   
 	while (!glfwWindowShouldClose(window)) {
 		// input   
@@ -83,7 +93,9 @@ int main() {
 		glm::mat4 view = camera.GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.10f, 10000.0f);
 
-		ourModel.Draw(shaderProgram, view, projection);
+		for (const auto& model : models) {
+			model.Draw(shaderProgram, view, projection);
+		}
 		// swap buffers and check and call events
 		glfwSwapBuffers(window);
 		glfwPollEvents();

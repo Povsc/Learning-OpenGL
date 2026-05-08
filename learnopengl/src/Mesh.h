@@ -37,11 +37,12 @@ public:
 
 	unsigned int VAO;
 
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, glm::mat4 model = glm::mat4(1.0f)) {
-		this->indices = indices;
-		this->textures = textures;
-		this->vertices = vertices;
-		this->model = model;
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, glm::mat4 model = glm::mat4(1.0f)) : 
+	indices(indices),
+	textures(textures),
+	vertices(vertices),
+	model(model) 
+	{
 
 		unsigned int VBO, EBO;
 		// create VAO/VBO/EBO
@@ -69,7 +70,7 @@ public:
 		glBindVertexArray(0); // Don't really need to "unbind" this 
 	}
 
-	void Draw(Shader &shader, glm::mat4 view, glm::mat4 projection) {
+	void Draw(const Shader &shader, glm::mat4 view, glm::mat4 projection) const {
 		// TODO: figure out shaders (prob similar to textures)
 
 		// bind appropriate textures abiding by our provisory texture types
@@ -107,7 +108,7 @@ public:
 
 		shader.use();
 		// precompute MVP
-		glm::mat4 MVP = projection * view * this->model;
+		glm::mat4 MVP = projection * view * model;
 		shader.setMat4("MVP", MVP);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
