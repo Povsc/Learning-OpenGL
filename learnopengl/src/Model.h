@@ -6,37 +6,30 @@
 
 #include "Mesh.h"
 #include <iostream>
+#include <stb_image.h>
 
 using json = nlohmann::json;
-
-struct TexToLoad {
-	unsigned int texID;
-	const char* type;
-};
-
-// TODO: most of these methods need to pass by (const) reference
-// TODO: Need a global pos and maybe rotation of this object
 
 class Model
 {
 public:
-	Model(const char* directory) :
-		directory(directory)
+	Model(const std::string directory_) :
+		directory_(directory_)
 	{
-		std::string fileStr = directory + std::string("scene.gltf");
+		std::string fileStr = directory_ + std::string("scene.gltf");
 		const char* file = fileStr.c_str();
 		std::string text = readFile(file);
-		JSON = json::parse(text);
+		json_ = json::parse(text);
 
 		// get bin data
-		data = getData();
+		data_ = getData();
 
 		// begin recurse
 		traverseNode(0);
 	}
 
-	void Draw(const Shader& shader, glm::mat4 view, glm::mat4 projection) const {
-		for (const Mesh& mesh : meshes) {
+	void Draw(const Shader& shader, const glm::mat4& view, const glm::mat4& projection) const {
+		for (const Mesh& mesh : meshes_) {
 			mesh.Draw(shader, view, projection);
 		}
 	}
@@ -49,29 +42,29 @@ public:
 		glm::mat4 groupTranslate = glm::translate(glm::mat4(1.0f), pos);
 		glm::mat4 groupMatrix = groupTranslate * groupScale; // Scale first, then translate
 
-		for (auto& mesh : meshes) {
+		for (auto& mesh : meshes_) {
 			mesh.model = groupMatrix * mesh.model;
 		}
 	}
 
 	glm::vec3 pos;
-	glm::vec3 scale{1, 1, 1};
+	glm::vec3 scale{ 1, 1, 1 };
 	//glm::vec3 name; TODO
 
 private:
-	const char* directory;
-	json JSON;
-	std::vector<unsigned char> data;
-	std::vector<Mesh> meshes;
-	std::vector<Texture> texturesLoaded;
+
+	struct TexToLoad {
+		unsigned int texID;
+		const char* type;
+	};
 
 	void loadMesh(unsigned int indMesh, glm::mat4 matrix) {
 		// get accessor indices
-		unsigned int posAcc = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["POSITION"];
-		unsigned int texAcc = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["TEXCOORD_0"]; // what happens when I need more UVs?
-		unsigned int indAcc = JSON["meshes"][indMesh]["primitives"][0]["indices"];
-		unsigned int norAcc = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["NORMAL"];
-		unsigned int matAcc = JSON["meshes"][indMesh]["primitives"][0].value("material", 0);
+		unsigned int posAcc = json_["meshes"][indMesh]["primitives"][0]["attributes"]["POSITION"];
+		unsigned int texAcc = json_["meshes"][indMesh]["primitives"][0]["attributes"]["TEXCOORD_0"]; // what happens when I need more UVs?
+		unsigned int indAcc = json_["meshes"][indMesh]["primitives"][0]["indices"];
+		unsigned int norAcc = json_["meshes"][indMesh]["primitives"][0]["attributes"]["NORMAL"];
+		unsigned int matAcc = json_["meshes"][indMesh]["primitives"][0].value("material", 0);
 
 		// use indices to get all components
 		std::vector<float> flPos = getFloats(posAcc);
@@ -88,13 +81,13 @@ private:
 		std::vector<unsigned int> indices = getIndices(indAcc);
 		std::vector<Vertex> vertices = assembleVertices(positions, texCoords, normals);
 
-		// make meshes
-		meshes.push_back(Mesh(vertices, indices, textures, matrix));
+		// make meshes -- do not std::move because of copy elision 
+		meshes_.push_back(Mesh(vertices, indices, textures, matrix));
 	}
 
 	void traverseNode(unsigned int nextNode, glm::mat4 matrix = glm::mat4(1.0f)) {
 		// current node
-		json node = JSON["nodes"][nextNode];
+		json node = json_["nodes"][nextNode];
 
 		// get matrix if it exists
 		glm::mat4 matNode = glm::mat4(1.0f);
@@ -105,7 +98,7 @@ private:
 			}
 			matNode = glm::make_mat4(matValues);
 		}
-		
+
 		// array to store values 
 		float values[4];
 
@@ -164,28 +157,28 @@ private:
 	std::vector<unsigned char> getData() {
 		// place to store raw text
 		std::string bytesText;
-		std::string uri = JSON["buffers"][0]["uri"];
+		std::string uri = json_["buffers"][0]["uri"];
 
 		// store raw text
-		bytesText = readFile((this->directory + uri).c_str());
+		bytesText = readFile((this->directory_ + uri).c_str());
 
 		// transform raw text data into bytes and put in vector
-		std::vector<unsigned char> data(bytesText.begin(), bytesText.end());
-		return data;
+		std::vector<unsigned char> data_(bytesText.begin(), bytesText.end());
+		return data_;
 	}
 
 	std::vector<float> getFloats(unsigned int accessorID) {
 		std::vector<float> floats;
 
 		// Get properties from accessor
-		unsigned int buffViewInd = JSON["accessors"][accessorID].value("bufferView", 0);
-		unsigned int byteOffset = JSON["accessors"][accessorID].value("byteOffset", 0);
-		unsigned int count = JSON["accessors"][accessorID]["count"];
-		std::string type = JSON["accessors"][accessorID]["type"];
+		unsigned int buffViewInd = json_["accessors"][accessorID].value("bufferView", 0);
+		unsigned int byteOffset = json_["accessors"][accessorID].value("byteOffset", 0);
+		unsigned int count = json_["accessors"][accessorID]["count"];
+		std::string type = json_["accessors"][accessorID]["type"];
 
 		// Get properties from the bufferview if it exists
 		if (buffViewInd != 0) {
-			json bufferView = JSON["bufferViews"][buffViewInd];
+			json bufferView = json_["bufferViews"][buffViewInd];
 			byteOffset += bufferView["byteOffset"];
 		}
 
@@ -200,7 +193,7 @@ private:
 		// Get bytes from data
 		unsigned int length = count * 4 * dim;
 		for (int i = byteOffset; i < byteOffset + length; i += 4) {
-			unsigned char bytes[] = { data[i], data[i + 1], data[i + 2], data[i + 3] }; // little-endian?
+			unsigned char bytes[] = { data_[i], data_[i + 1], data_[i + 2], data_[i + 3] }; // little-endian?
 			float val;
 			std::memcpy(&val, bytes, sizeof(float));
 			floats.push_back(val);
@@ -213,16 +206,16 @@ private:
 		std::vector<unsigned int> indices;
 
 		// Get properties from accessor
-		unsigned int buffViewInd = JSON["accessors"][accessorID].value("bufferView", 0);
-		unsigned int byteOffset = JSON["accessors"][accessorID].value("byteOffset", 0);
-		unsigned int count = JSON["accessors"][accessorID]["count"];
+		unsigned int buffViewInd = json_["accessors"][accessorID].value("bufferView", 0);
+		unsigned int byteOffset = json_["accessors"][accessorID].value("byteOffset", 0);
+		unsigned int count = json_["accessors"][accessorID]["count"];
 
 		// componentTypes can be: 5125 -> uint; 5123 -> ushort; 5122 -> short
-		unsigned int type = JSON["accessors"][accessorID]["componentType"];
+		unsigned int type = json_["accessors"][accessorID]["componentType"];
 
 		// Get properties from the bufferview if it exists
 		if (buffViewInd != 0) {
-			json bufferView = JSON["bufferViews"][buffViewInd];
+			json bufferView = json_["bufferViews"][buffViewInd];
 			byteOffset += bufferView["byteOffset"];
 		}
 
@@ -230,7 +223,7 @@ private:
 		case 5125: // unsigned int 
 			for (int i = byteOffset; i < byteOffset + count * 4; i += 4)
 			{
-				unsigned char bytes[] = { data[i], data[i + 1], data[i + 2], data[i + 3] }; // little-endian?
+				unsigned char bytes[] = { data_[i], data_[i + 1], data_[i + 2], data_[i + 3] }; // little-endian?
 				unsigned int val;
 				std::memcpy(&val, bytes, sizeof(unsigned int));
 				indices.push_back(val);
@@ -239,7 +232,7 @@ private:
 		case 5123: // unsigned short
 			for (int i = byteOffset; i < byteOffset + count * 2; i += 2)
 			{
-				unsigned char bytes[] = { data[i], data[i + 1] };
+				unsigned char bytes[] = { data_[i], data_[i + 1] };
 				unsigned short val;
 				std::memcpy(&val, bytes, sizeof(unsigned short));
 				indices.push_back(val);
@@ -248,7 +241,7 @@ private:
 		case 5122: // short
 			for (int i = byteOffset; i < byteOffset + count * 2; i += 2)
 			{
-				unsigned char bytes[] = { data[i], data[i + 1] };
+				unsigned char bytes[] = { data_[i], data_[i + 1] };
 				short val;
 				std::memcpy(&val, bytes, sizeof(short));
 				indices.push_back(val);
@@ -264,7 +257,7 @@ private:
 
 	/* TODO: Cover more cases!
 	Very incomplete function, only getting base color texture, but can easily expand to also allow for other textures
-	(e.g. normal, specular), as well as different TEXCOORD mappings. Also where PBR information is stored. Doesn't make 
+	(e.g. normal, specular), as well as different TEXCOORD mappings. Also where PBR information is stored. Doesn't make
 	sense to make this too robust right now, but can easily be improved in the future. */
 	std::vector<Texture> getTextures(unsigned int accessorID) {
 		// store textures/texture info
@@ -273,7 +266,7 @@ private:
 
 		// Get Texture IDs
 		// base color texture is stored in PBR for some reason
-		unsigned int baseColorID = JSON["materials"][accessorID]["pbrMetallicRoughness"]["baseColorTexture"]["index"];
+		unsigned int baseColorID = json_["materials"][accessorID]["pbrMetallicRoughness"]["baseColorTexture"]["index"];
 		TexToLoad baseColor;
 		baseColor.texID = baseColorID;
 		baseColor.type = "diffuse";
@@ -285,14 +278,14 @@ private:
 		unsigned int sampID;
 		for (TexToLoad tex : toLoad) { // right now this loop is silly because we're only retrieving one texture per mesh
 			// get image path
-			unsigned int pathID = JSON["textures"][tex.texID]["source"];
-			int sampID = JSON["textures"][tex.texID].value("sampler", -1);
-			std::string path = this->directory + JSON["images"][pathID].value("uri", ""); // not sure why this is preventing from crashing
+			unsigned int pathID = json_["textures"][tex.texID]["source"];
+			int sampID = json_["textures"][tex.texID].value("sampler", -1);
+			std::string path = this->directory_ + json_["images"][pathID].value("uri", ""); // not sure why this is preventing from crashing
 			//const char* path = pathStr.c_str();
 
 			// check if texture is already loaded
 			bool skip = false;
-			for (Texture texture : texturesLoaded) {
+			for (Texture texture : texturesLoaded_) {
 				if (std::strcmp(path.data(), texture.filepath.data()) == 0) {
 					textures.push_back(texture);
 					skip = true;
@@ -304,7 +297,7 @@ private:
 				texture.id = loadTexture(path.c_str(), sampID);
 				texture.filepath = path;
 				texture.type = "diffuse";
-				texturesLoaded.push_back(texture);
+				texturesLoaded_.push_back(texture);
 				textures.push_back(texture);
 			}
 		}
@@ -320,10 +313,10 @@ private:
 		// get parameters from sampler if sampler ID exists
 		if (sampID != -1) {
 			// get image wrap/filtering options
-			unsigned int iMagFilter = JSON["samplers"][sampID].value("magFilter", 9729);
-			unsigned int iMinFilter = JSON["samplers"][sampID].value("minFilter", 9987);
-			unsigned int iWrapS = JSON["samplers"][sampID].value("wrapS", 10497);
-			unsigned int iWrapT = JSON["samplers"][sampID].value("wrapT", 10497);
+			unsigned int iMagFilter = json_["samplers"][sampID].value("magFilter", 9729);
+			unsigned int iMinFilter = json_["samplers"][sampID].value("minFilter", 9987);
+			unsigned int iWrapS = json_["samplers"][sampID].value("wrapS", 10497);
+			unsigned int iWrapT = json_["samplers"][sampID].value("wrapT", 10497);
 
 			// get magFilter;
 			switch (iMagFilter) {
@@ -406,12 +399,10 @@ private:
 		unsigned int ID;
 		glGenTextures(1, &ID);
 
-		//stbi_set_flip_vertically_on_load(true); 
-
 		// retrieve data
 		int width, height, nrChannels;
-		unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
-		if (data) {
+		unsigned char* data_ = stbi_load(path, &width, &height, &nrChannels, 0);
+		if (data_) {
 			GLint channels;
 			switch (nrChannels) { // retrieve number of channels
 			case 1:
@@ -430,7 +421,7 @@ private:
 
 			// bind texture
 			glBindTexture(GL_TEXTURE_2D, ID);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, channels, GL_UNSIGNED_BYTE, data);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, channels, GL_UNSIGNED_BYTE, data_);
 			glGenerateMipmap(GL_TEXTURE_2D);
 
 			// set texture parameters
@@ -443,25 +434,25 @@ private:
 			std::cout << "Failed to load texture at path " << path << std::endl;
 		}
 		// free loaded image
-		stbi_image_free(data); // free image memory
+		stbi_image_free(data_); // free image memory
 		return ID;
 	}
 
-	std::vector<Vertex> assembleVertices(std::vector<glm::vec3> position, std::vector < glm::vec2> TexCoords, std::vector<glm::vec3> normal) {
+	std::vector<Vertex> assembleVertices(const std::vector<glm::vec3>& position, const std::vector<glm::vec2>& TexCoords, const std::vector<glm::vec3>& normal) {
 		std::vector<Vertex> vertices;
 		Vertex vertex;
 
 		for (int i = 0; i < position.size(); i++) {
-			vertex.Position = (position[i] + pos) * scale;
-			vertex.TexCoords = TexCoords[i];
-			vertex.Normal = normal[i];
+			vertex.position = position[i];
+			vertex.texCoords = TexCoords[i];
+			vertex.normal = normal[i];
 			vertices.push_back(vertex);
 		}
 
 		return vertices;
 	}
 
-	std::string readFile(const char *file) {
+	std::string readFile(const std::string file) {
 		std::ifstream is;
 
 		// ensure ifstream can throw exceptions
@@ -481,17 +472,17 @@ private:
 		}
 	}
 
-	std::vector<glm::vec2> groupFloatsVec2(std::vector<float> floats) {
+	std::vector<glm::vec2> groupFloatsVec2(const std::vector<float>& floats) {
 		std::vector<glm::vec2> vectors;
 
 		for (int i = 0; i < floats.size(); i += 2) {
 			vectors.push_back(glm::vec2(floats[i], floats[i + 1]));
 		}
-		
+
 		return vectors;
 	}
 
-	std::vector<glm::vec3> groupFloatsVec3(std::vector<float> floats) {
+	std::vector<glm::vec3> groupFloatsVec3(const std::vector<float>& floats) {
 		std::vector<glm::vec3> vectors;
 
 		for (int i = 0; i < floats.size(); i += 3) {
@@ -500,4 +491,10 @@ private:
 
 		return vectors;
 	}
+
+	const std::string directory_;
+	json json_;
+	std::vector<unsigned char> data_;
+	std::vector<Mesh> meshes_;
+	std::vector<Texture> texturesLoaded_;
 };

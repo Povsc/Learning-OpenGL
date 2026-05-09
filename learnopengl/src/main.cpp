@@ -4,7 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <stb_image.h>
-#include<unordered_set>
+#include <vector>
 
 #include <iostream>
 #include "Shader.h"
@@ -16,7 +16,7 @@ void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(std::move(glm::vec3(0.0f, 0.0f, 3.0f)));
 unsigned int SCR_WIDTH = 800;
 unsigned int SCR_HEIGHT = 600;
 float lastX, lastY; // why even initialize?
@@ -49,7 +49,7 @@ int main() {
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "FAILED TO INITIALIZE GLAD\n";
-			return -1;
+		return -1;
 	}
 
 	// Actually open window
@@ -69,7 +69,7 @@ int main() {
 	// Shader setup
 	const Shader shaderProgram("shaders/texture.vert", "shaders/texture.frag");
 
-	// Test models
+	// Test models -- TODO: eventually would be good to load models in background
 	std::vector<Model> models;
 	models.emplace_back("assets/gltf/real-time_bones_demo_phoenix_bird/");
 	models.emplace_back("assets/gltf/dusty_old_bookshelf_free/");
@@ -78,18 +78,18 @@ int main() {
 	// DELETE AFTER: JUST FOR TESTING
 	models[0].updateGloablPosAndScale(glm::vec3(5, 2, 0), glm::vec3(0.01, 0.01, 0.01));
 	models[2].updateGloablPosAndScale(glm::vec3(-5, 0, 0), glm::vec3(0.01, 0.01, 0.01));
-				   
+
 	while (!glfwWindowShouldClose(window)) {
 		// input   
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		processInput(window);
-				   
+
 		// rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				   
+
 		glm::mat4 view = camera.GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.10f, 10000.0f);
 
@@ -120,17 +120,17 @@ void processInput(GLFWwindow* window) {
 		glfwSetWindowShouldClose(window, true);
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.ProcessKeyboard(FORWARD, deltaTime);
+		camera.ProcessKeyboard(Movement::FORWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera.ProcessKeyboard(BACKWARD, deltaTime);
+		camera.ProcessKeyboard(Movement::BACKWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-		camera.ProcessKeyboard(DOWN, deltaTime);
+		camera.ProcessKeyboard(Movement::DOWN, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-		camera.ProcessKeyboard(UP, deltaTime);
+		camera.ProcessKeyboard(Movement::UP, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera.ProcessKeyboard(LEFT, deltaTime);
+		camera.ProcessKeyboard(Movement::LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera.ProcessKeyboard(RIGHT, deltaTime);
+		camera.ProcessKeyboard(Movement::RIGHT, deltaTime);
 
 	// TODO: is this performant?
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {

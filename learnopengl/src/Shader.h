@@ -13,14 +13,14 @@ class Shader {
 public:
 	unsigned int ID;
 
-	Shader(const char* vertexPath, const char* fragmentPath) {
+	Shader(const std::string& vertexPath, const std::string& fragmentPath) {
 		std::string vertexCode;
 		std::string fragmentCode;
 		std::ifstream vShaderFile;
 		std::ifstream fShaderFile;
 		// ensure ifstream can throw exceptions (?) TODO: understand C++ I/O better
-		vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
-		fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+		vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+		fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 		try {
 			vShaderFile.open(vertexPath);
 			fShaderFile.open(fragmentPath);
@@ -35,7 +35,7 @@ public:
 			vertexCode = vShaderStream.str();
 			fragmentCode = fShaderStream.str();
 		}
-		catch(std::ifstream::failure e) {
+		catch (std::ifstream::failure e) {
 			std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ\n";
 		}
 		const char* vShaderCode = vertexCode.c_str();
@@ -88,7 +88,7 @@ public:
 	}
 
 private:
-	void checkCompilation(unsigned int shader, std::string type) {
+	void checkCompilation(unsigned int shader, std::string type) const {
 		// Check for compilation errors
 		int success;
 		char infoLog[1024];
@@ -103,7 +103,7 @@ private:
 			glGetProgramiv(shader, GL_LINK_STATUS, &success);
 			if (!success) {
 				glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-				std::cout << "ERROR::PROGRAM_LINKING_ERROR\n"  << infoLog << std::endl;
+				std::cout << "ERROR::PROGRAM_LINKING_ERROR\n" << infoLog << std::endl;
 			}
 		}
 	}

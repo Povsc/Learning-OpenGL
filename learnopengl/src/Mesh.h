@@ -3,25 +3,25 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <vector> // why?
+#include <vector>
 #include <string>
 #include "Shader.h"
 
 struct Vertex
 {
-	glm::vec3 Position;
-	glm::vec2 TexCoords;
-	glm::vec3 Normal;
+	glm::vec3 position;
+	glm::vec2 texCoords;
+	glm::vec3 normal;
 	// Probably adding these later on
 	// 
-	//glm::vec3 Tangent;
-	//glm::vec3 Bitangent;
+	//glm::vec3 tangent;
+	//glm::vec3 bitangent;
 	//bone stuff for animation?
 };
 
 struct Texture
 {
-	unsigned int id;
+	unsigned int id; // understand what OpenGL is doing under the hood, how is this cached
 	std::string filepath;
 	std::string type; // Provisory types: diffuse, specular, normal, height
 };
@@ -37,11 +37,11 @@ public:
 
 	unsigned int VAO;
 
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, glm::mat4 model = glm::mat4(1.0f)) : 
-	indices(indices),
-	textures(textures),
-	vertices(vertices),
-	model(model) 
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, glm::mat4 model = glm::mat4(1.0f)) :
+		indices(indices),
+		textures(textures),
+		vertices(vertices),
+		model(model)
 	{
 
 		unsigned int VBO, EBO;
@@ -61,18 +61,16 @@ public:
 		// configure VAO
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 		glEnableVertexAttribArray(2);
 		// TODO: Add extra vertex info (normals, etc)
 
 		glBindVertexArray(0); // Don't really need to "unbind" this 
 	}
 
-	void Draw(const Shader &shader, glm::mat4 view, glm::mat4 projection) const {
-		// TODO: figure out shaders (prob similar to textures)
-
+	void Draw(const Shader& shader, const glm::mat4& view, const glm::mat4& projection) const {
 		// bind appropriate textures abiding by our provisory texture types
 		unsigned short diffuseCount = 1;
 		unsigned short specularCount = 1;
