@@ -3,27 +3,14 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <stb_image.h>
 #include <vector>
 
 #include <iostream>
 #include "Shader.h"
 #include "Camera.h"
 #include "Model.h"
+#include "Window.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-
-Camera camera(std::move(glm::vec3(0.0f, 0.0f, 3.0f)));
-unsigned int SCR_WIDTH = 800;
-unsigned int SCR_HEIGHT = 600;
-float lastX, lastY; // why even initialize?
-bool firstMouse = true;
-
-float lastFrame = 0.0f;
-float deltaTime = 0.0f;
 
 // Weird way (?) to force computer to use NVIDIA or AMD dedicated GPU
 extern "C"
@@ -33,38 +20,18 @@ extern "C"
 }
 
 int main() {
-	// Initialize window object
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_CORE_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	float lastFrame = 0.0f;
+	float deltaTime = 0.0f;
+	auto camera = std::make_shared<Camera>(std::move(glm::vec3(0.0f, 0.0f, 3.0f)));
+	Window window(camera);
 
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-	if (window == NULL) {
-		std::cout << "FAILED TO CREATE GLFW WINDOW\n";
-		glfwTerminate();
+	if (window.shouldClose()) {
+		std::cout << "Error initializing window;\n";
 		return -1;
 	}
-	glfwMakeContextCurrent(window);
-
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		std::cout << "FAILED TO INITIALIZE GLAD\n";
-		return -1;
-	}
-
-	// Actually open window
-	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetScrollCallback(window, scroll_callback);
 
 	// OpenGL global parameters
 	glEnable(GL_DEPTH_TEST);
-
-	// TODO: add shader lookup in asset folder? that would lead to a lot of repeated files?
-	// might be good enough for now. and have this as fallback? might be best to work on 
-	// lighting first
 
 	// Shader setup
 	const Shader shaderProgram("shaders/texture.vert", "shaders/texture.frag");
@@ -79,85 +46,27 @@ int main() {
 	models[0].updateGloablPosAndScale(glm::vec3(5, 2, 0), glm::vec3(0.01, 0.01, 0.01));
 	models[2].updateGloablPosAndScale(glm::vec3(-5, 0, 0), glm::vec3(0.01, 0.01, 0.01));
 
-	while (!glfwWindowShouldClose(window)) {
+	while (!window.shouldClose()) {
 		// input   
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-		processInput(window);
+		window.processInput(deltaTime);
 
 		// rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::mat4 view = camera.GetViewMatrix();
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.10f, 10000.0f);
+		glm::mat4 view = camera->GetViewMatrix();
+		glm::mat4 projection = glm::perspective(glm::radians(45.0f), float(window.width) / float(window.height), 0.10f, 10000.0f);
 
 		for (const auto& model : models) {
 			model.Draw(shaderProgram, view, projection);
 		}
-		// swap buffers and check and call events
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+
+		window.swapBuffers();
 	}
 
 	glfwTerminate();
 	return 0;
-}
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-	glViewport(0, 0, width, height);
-
-	// Allow perspective matrix to update aspect ratio
-	SCR_HEIGHT = height;
-	SCR_WIDTH = width;
-
-	// updates frames while resizing window requires multithreading
-}
-
-void processInput(GLFWwindow* window) {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
-
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.ProcessKeyboard(Movement::FORWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera.ProcessKeyboard(Movement::BACKWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-		camera.ProcessKeyboard(Movement::DOWN, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-		camera.ProcessKeyboard(Movement::UP, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera.ProcessKeyboard(Movement::LEFT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera.ProcessKeyboard(Movement::RIGHT, deltaTime);
-
-	// TODO: is this performant?
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-		// do stuff
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		glfwSetCursorPosCallback(window, mouse_callback);
-	}
-	else {
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		glfwSetCursorPosCallback(window, nullptr);
-		firstMouse = true;
-	}
-}
-
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-	if (firstMouse) {
-		lastX = xpos;
-		lastY = ypos;
-		firstMouse = false;
-	}
-	float xOffset = (xpos - lastX);
-	float yOffset = (lastY - ypos);
-	lastX = xpos;
-	lastY = ypos;
-	camera.ProcessMouseMovement(xOffset, yOffset);
-}
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-	camera.ProcessMouseScroll(yoffset);
 }
