@@ -7,11 +7,6 @@ namespace {
 }
 
 class Window {
-private:
-	//void framebuffer_size_callback(GLFWwindow* /* window */, int width, int height);
-	//void mouse_callback(GLFWwindow* /* window */, double xpos, double ypos);
-	//void scroll_callback(GLFWwindow* /* window */, double xoffset, double yoffset);
-
 public:
 	Window(std::shared_ptr<Camera> camera, unsigned int width = DEFAULT_WIDTH, unsigned int height = DEFAULT_HEIGHT) :
 		camera_(camera),
@@ -20,7 +15,8 @@ public:
 		lastX_(0.),
 		lastY_(0.),
 		firstMouse_(true),
-		error_(false)
+		error_(false),
+		lastFrame(0.)
 	{
 		// Initialize window object
 		glfwInit();
@@ -54,7 +50,13 @@ public:
 		glfwSetScrollCallback(window_, scroll_callback);
 	}
 
-	void processInput(float deltaTime) {
+	~Window() {
+		glfwTerminate();
+	}
+
+	void processInput() {
+		float deltaTime = getDeltaTime();
+
 		if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window_, true);
 
@@ -93,6 +95,14 @@ public:
 		glfwSwapBuffers(window_);
 		glfwPollEvents();
 
+	}
+
+	float getDeltaTime() {
+		float currentFrame = glfwGetTime();
+		float deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		return deltaTime;
 	}
 
 	unsigned int width;
@@ -145,5 +155,5 @@ private:
 	float lastX_, lastY_; // why even initialize?
 	bool firstMouse_;
 	bool error_;
-
+	float lastFrame;
 };

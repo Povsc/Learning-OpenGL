@@ -1,11 +1,9 @@
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 
-#include <iostream>
 #include "Shader.h"
 #include "Camera.h"
 #include "Model.h"
@@ -47,11 +45,7 @@ int main() {
 	models[2].updateGloablPosAndScale(glm::vec3(-5, 0, 0), glm::vec3(0.01, 0.01, 0.01));
 
 	while (!window.shouldClose()) {
-		// input   
-		float currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-		window.processInput(deltaTime);
+		window.processInput();
 
 		// rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -67,6 +61,5 @@ int main() {
 		window.swapBuffers();
 	}
 
-	glfwTerminate();
 	return 0;
 }
