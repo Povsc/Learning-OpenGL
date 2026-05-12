@@ -79,10 +79,9 @@ private:
 
 		// combine into Mesh
 		std::vector<unsigned int> indices = getIndices(indAcc);
-		std::vector<Vertex> vertices = assembleVertices(positions, texCoords, normals);
+		std::vector<Vertex> vertices = assembleVertices(std::move(positions), std::move(texCoords), std::move(normals));
 
-		// make meshes -- do not std::move because of copy elision 
-		meshes_.push_back(Mesh(vertices, indices, textures, matrix));
+		meshes_.emplace_back(std::move(vertices), std::move(indices), std::move(textures), std::move(matrix));
 	}
 
 	void traverseNode(unsigned int nextNode, glm::mat4 matrix = glm::mat4(1.0f)) {
@@ -149,18 +148,16 @@ private:
 		// traverse through children if they exist
 		if (node.find("children") != node.end()) {
 			for (unsigned int i = 0; i < node["children"].size(); i++) {
-				traverseNode(node["children"][i], matNextNode);
+				traverseNode(node["children"][i], std::move(matNextNode));
 			}
 		}
 	}
 
 	std::vector<unsigned char> getData() {
-		// place to store raw text
-		std::string bytesText;
 		std::string uri = json_["buffers"][0]["uri"];
 
 		// store raw text
-		bytesText = readFile((this->directory_ + uri).c_str());
+		std::string bytesText = readFile((this->directory_ + uri).c_str());
 
 		// transform raw text data into bytes and put in vector
 		std::vector<unsigned char> data_(bytesText.begin(), bytesText.end());
@@ -262,7 +259,7 @@ private:
 	std::vector<Texture> getTextures(unsigned int accessorID) {
 		// store textures/texture info
 		std::vector<TexToLoad> toLoad;
-		std::vector<Texture> textures;
+		std::vector<Texture> textures{};
 
 		// Get Texture IDs
 		// base color texture is stored in PBR for some reason
@@ -438,17 +435,18 @@ private:
 		return ID;
 	}
 
-	std::vector<Vertex> assembleVertices(const std::vector<glm::vec3>& position, const std::vector<glm::vec2>& TexCoords, const std::vector<glm::vec3>& normal) {
-		std::vector<Vertex> vertices;
-		Vertex vertex;
+	std::vector<Vertex> assembleVertices(std::vector<glm::vec3> position, std::vector<glm::vec2> TexCoords, std::vector<glm::vec3> normal) {
+		std::vector<Vertex> vertices{};
 
 		for (int i = 0; i < position.size(); i++) {
-			vertex.position = position[i];
-			vertex.texCoords = TexCoords[i];
-			vertex.normal = normal[i];
-			vertices.push_back(vertex);
+			Vertex vertex{
+				.position = std::move(position[i]),
+				.texCoords = std::move(TexCoords[i]),
+				.normal = std::move(normal[i]) };
+			vertices.push_back(std::move(vertex));
 		}
 
+		// does NRVO happen here?
 		return vertices;
 	}
 
@@ -476,7 +474,7 @@ private:
 		std::vector<glm::vec2> vectors;
 
 		for (int i = 0; i < floats.size(); i += 2) {
-			vectors.push_back(glm::vec2(floats[i], floats[i + 1]));
+			vectors.emplace_back(floats[i], floats[i + 1]);
 		}
 
 		return vectors;
@@ -486,7 +484,7 @@ private:
 		std::vector<glm::vec3> vectors;
 
 		for (int i = 0; i < floats.size(); i += 3) {
-			vectors.push_back(glm::vec3(floats[i], floats[i + 1], floats[i + 2]));
+			vectors.emplace_back(floats[i], floats[i + 1], floats[i + 2]);
 		}
 
 		return vectors;

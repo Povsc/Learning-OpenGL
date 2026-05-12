@@ -37,11 +37,11 @@ public:
 
 	unsigned int VAO;
 
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, glm::mat4 model = glm::mat4(1.0f)) :
-		indices(indices),
-		textures(textures),
-		vertices(vertices),
-		model(model)
+	Mesh(std::vector<Vertex>&& vertices, std::vector<unsigned int>&& indices, std::vector<Texture>&& textures, glm::mat4&& model = glm::mat4(1.0f)) :
+		indices(std::move(indices)),
+		textures(std::move(textures)),
+		vertices(std::move(vertices)),
+		model(std::move(model))
 	{
 
 		unsigned int VBO, EBO;
@@ -54,9 +54,9 @@ public:
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		// TODO: When to not make static draw?
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex), &this->vertices[0], GL_STATIC_DRAW);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(unsigned int), &this->indices[0], GL_STATIC_DRAW);
 
 		// configure VAO
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
