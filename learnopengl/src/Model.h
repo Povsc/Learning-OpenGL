@@ -7,8 +7,11 @@
 #include "Mesh.h"
 #include <iostream>
 #include <stb_image.h>
+#include <filesystem>
+
 
 using json = nlohmann::json;
+using namespace mesh;
 
 class Model
 {
@@ -49,7 +52,6 @@ public:
 
 	glm::vec3 pos;
 	glm::vec3 scale{ 1, 1, 1 };
-	//glm::vec3 name; TODO
 
 private:
 
@@ -463,7 +465,7 @@ private:
 			return tstream.str();
 		}
 		catch (std::ifstream::failure e) {
-			std::cout << "ERROR::MODEL_LOADING::FILE_NOT_SUCCESSFULLY_READ\n" << file << std::endl;
+			throw std::exception("ERROR::MODEL_LOADING::FILE_NOT_SUCCESSFULLY_READ: file\n");
 		}
 	}
 
