@@ -189,7 +189,7 @@ private:
 
 		// Get bytes from data
 		unsigned int length = count * 4 * dim;
-		for (int i = byteOffset; i < byteOffset + length; i += 4) {
+		for (unsigned int i = byteOffset; i < byteOffset + length; i += 4) {
 			unsigned char bytes[] = { data_[i], data_[i + 1], data_[i + 2], data_[i + 3] }; // little-endian?
 			float val;
 			std::memcpy(&val, bytes, sizeof(float));
@@ -218,7 +218,7 @@ private:
 
 		switch (type) {
 		case 5125: // unsigned int 
-			for (int i = byteOffset; i < byteOffset + count * 4; i += 4)
+			for (unsigned int i = byteOffset; i < byteOffset + count * 4; i += 4)
 			{
 				unsigned char bytes[] = { data_[i], data_[i + 1], data_[i + 2], data_[i + 3] }; // little-endian?
 				unsigned int val;
@@ -227,7 +227,7 @@ private:
 			}
 			break;
 		case 5123: // unsigned short
-			for (int i = byteOffset; i < byteOffset + count * 2; i += 2)
+			for (unsigned int i = byteOffset; i < byteOffset + count * 2; i += 2)
 			{
 				unsigned char bytes[] = { data_[i], data_[i + 1] };
 				unsigned short val;
@@ -236,7 +236,7 @@ private:
 			}
 			break;
 		case 5122: // short
-			for (int i = byteOffset; i < byteOffset + count * 2; i += 2)
+			for (unsigned int i = byteOffset; i < byteOffset + count * 2; i += 2)
 			{
 				unsigned char bytes[] = { data_[i], data_[i + 1] };
 				short val;
@@ -270,13 +270,10 @@ private:
 		toLoad.push_back(baseColor);
 
 		// TODO: Add more potential texture types
-
-		unsigned int pathID;
-		unsigned int sampID;
 		for (TexToLoad tex : toLoad) { // right now this loop is silly because we're only retrieving one texture per mesh
 			// get image path
 			unsigned int pathID = json_["textures"][tex.texID]["source"];
-			int sampID = json_["textures"][tex.texID].value("sampler", -1);
+			unsigned int sampID = json_["textures"][tex.texID].value("sampler", -1);
 			std::string path = this->directory_ + json_["images"][pathID].value("uri", ""); // not sure why this is preventing from crashing
 			//const char* path = pathStr.c_str();
 
