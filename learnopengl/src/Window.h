@@ -97,6 +97,10 @@ public:
 
 	}
 
+	float getTime() {
+		return glfwGetTime();
+	}
+
 	float getDeltaTime() {
 		float currentFrame = glfwGetTime();
 		float deltaTime = currentFrame - lastFrame;
