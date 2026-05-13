@@ -27,11 +27,16 @@ namespace mesh {
 
 	class Mesh {
 	public:
-		Mesh(std::vector<Vertex>&& vertices, std::vector<unsigned int>&& indices, std::vector<Texture>&& textures, glm::mat4&& model = glm::mat4(1.0f)) :
+		Mesh(std::vector<Vertex>&& vertices,
+			std::vector<unsigned int>&& indices,
+			std::vector<Texture>&& textures,
+			std::shared_ptr<glm::mat4> parentModel,
+			glm::mat4&& model = glm::mat4(1.0f)) :
 			indices_(std::move(indices)),
 			textures_(std::move(textures)),
 			vertices_(std::move(vertices)),
-			model(std::move(model))
+			model_(std::move(model)),
+			parentModel_(parentModel)
 		{
 
 			unsigned int VBO, EBO;
@@ -96,13 +101,11 @@ namespace mesh {
 
 			shader.use();
 			// precompute MVP
-			glm::mat4 MVP = projection * view * model;
+			glm::mat4 MVP = projection * view * (*parentModel_) * model_;
 			shader.setMat4("MVP", MVP);
 			glBindVertexArray(VAO_);
 			glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
 		}
-
-		glm::mat4 model;
 
 
 	private:
@@ -110,6 +113,8 @@ namespace mesh {
 		std::vector<mesh::Vertex> vertices_;
 		std::vector<unsigned int> indices_;
 		std::vector<Texture> textures_;
+		glm::mat4 model_;
+		std::shared_ptr<glm::mat4> parentModel_;
 
 	};
 

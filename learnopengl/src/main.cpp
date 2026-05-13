@@ -33,13 +33,9 @@ int main() {
 
 	// Test models -- TODO: eventually would be good to load models in background
 	std::vector<Model> models;
-	models.emplace_back("assets/gltf/real-time_bones_demo_phoenix_bird/");
+	models.emplace_back("assets/gltf/real-time_bones_demo_phoenix_bird/", glm::vec3(-10, 5, 0), glm::vec3(0.01, 0.01, 0.01));
 	models.emplace_back("assets/gltf/dusty_old_bookshelf_free/");
-	models.emplace_back("assets/gltf/survival_guitar_backpack/");
-
-	// DELETE AFTER: JUST FOR TESTING
-	models[0].updateGloablPosAndScale(glm::vec3(5, 2, 0), glm::vec3(0.01, 0.01, 0.01));
-	models[2].updateGloablPosAndScale(glm::vec3(-5, 0, 0), glm::vec3(0.01, 0.01, 0.01));
+	models.emplace_back("assets/gltf/survival_guitar_backpack/", glm::vec3(-5, 0, 0), glm::vec3(0.01, 0.01, 0.01));
 
 	while (!window.shouldClose()) {
 		window.processInput();
@@ -50,6 +46,11 @@ int main() {
 
 		glm::mat4 view = camera->GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), float(window.width) / float(window.height), 0.10f, 10000.0f);
+
+		float time = window.getTime();/*
+		models[0].updatePosition(glm::vec3(-10, 5, 0) + glm::vec3(time, -time, 0));
+		models[1].updateSacle(glm::vec3(fmod(time, 10), fmod(time * 1.5, 10), time));
+		models[2].updateRotation(glm::quat(time * 0.1, time * 0.1, 0, 0));*/
 
 		for (const auto& model : models) {
 			model.Draw(shaderProgram, view, projection);

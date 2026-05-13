@@ -16,8 +16,15 @@ using namespace mesh;
 class Model
 {
 public:
-	Model(const std::string directory_) :
-		directory_(directory_)
+	Model(const std::string directory_,
+		glm::vec3 pos = glm::vec3(0.),
+		glm::vec3 scale = glm::vec3(1.),
+		glm::quat rot = glm::quat(1., 0., 0., 0.)) :
+		directory_(directory_),
+		pos_(std::move(pos)),
+		scale_(std::move(scale)),
+		rot_(std::move(rot)),
+		model_(std::make_shared<glm::mat4>(1.0))
 	{
 		std::string fileStr = directory_ + std::string("scene.gltf");
 		const char* file = fileStr.c_str();
@@ -29,6 +36,7 @@ public:
 
 		// begin recurse
 		traverseNode(0);
+		updateModel();
 	}
 
 	void Draw(const Shader& shader, const glm::mat4& view, const glm::mat4& projection) const {
@@ -37,21 +45,20 @@ public:
 		}
 	}
 
-	void updateGloablPosAndScale(glm::vec3 pos, glm::vec3 scale) {
-		pos = pos;
-		scale = scale;
-
-		glm::mat4 groupScale = glm::scale(glm::mat4(1.0f), scale);
-		glm::mat4 groupTranslate = glm::translate(glm::mat4(1.0f), pos);
-		glm::mat4 groupMatrix = groupTranslate * groupScale; // Scale first, then translate
-
-		for (auto& mesh : meshes_) {
-			mesh.model = groupMatrix * mesh.model;
-		}
+	void updatePosition(glm::vec3 pos) {
+		pos_ = pos;
+		updateModel();
 	}
 
-	glm::vec3 pos;
-	glm::vec3 scale{ 1, 1, 1 };
+	void updateSacle(glm::vec3 scale) {
+		scale_ = scale;
+		updateModel();
+	}
+
+	void updateRotation(glm::quat rot) {
+		rot_ = rot;
+		updateModel();
+	}
 
 private:
 
@@ -83,7 +90,7 @@ private:
 		std::vector<unsigned int> indices = getIndices(indAcc);
 		std::vector<Vertex> vertices = assembleVertices(std::move(positions), std::move(texCoords), std::move(normals));
 
-		meshes_.emplace_back(std::move(vertices), std::move(indices), std::move(textures), std::move(matrix));
+		meshes_.emplace_back(std::move(vertices), std::move(indices), std::move(textures), model_, std::move(matrix));
 	}
 
 	void traverseNode(unsigned int nextNode, glm::mat4 matrix = glm::mat4(1.0f)) {
@@ -130,14 +137,10 @@ private:
 			quaternion = glm::make_quat(values);
 		}
 
-		// initialize matrices
-		glm::mat4 trans = glm::mat4(1.0f);
-		glm::mat4 sca = glm::mat4(1.0f);
-
 		// apply transformations
-		trans = glm::translate(trans, translation);
+		auto trans = glm::translate(glm::mat4(1.0f), translation);
 		glm::mat4 rot = glm::mat4_cast(quaternion);
-		sca = glm::scale(sca, scale);
+		auto sca = glm::scale(glm::mat4(1.0f), scale);
 
 
 		glm::mat4 matNextNode = trans * rot * sca * matrix * matNode;
@@ -489,9 +492,24 @@ private:
 		return vectors;
 	}
 
+	void updateModel() {
+		auto trans = glm::translate(glm::mat4(1.0f), pos_);
+		auto rot = glm::mat4_cast(rot_);
+		auto sca = glm::scale(glm::mat4(1.0f), scale_);
+
+
+		*model_ = trans * rot * sca;
+	}
+
+
 	const std::string directory_;
 	json json_;
 	std::vector<unsigned char> data_;
 	std::vector<Mesh> meshes_;
 	std::vector<Texture> texturesLoaded_;
+
+	glm::vec3 pos_;
+	glm::vec3 scale_;
+	glm::quat rot_;
+	std::shared_ptr<glm::mat4> model_;
 };
