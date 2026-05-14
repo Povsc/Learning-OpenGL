@@ -30,11 +30,13 @@ namespace mesh {
 		Mesh(std::vector<Vertex>&& vertices,
 			std::vector<unsigned int>&& indices,
 			std::vector<Texture>&& textures,
+			std::shared_ptr<Shader> shader,
 			std::shared_ptr<glm::mat4> parentModel,
 			glm::mat4&& model = glm::mat4(1.0f)) :
+			vertices_(std::move(vertices)),
 			indices_(std::move(indices)),
 			textures_(std::move(textures)),
-			vertices_(std::move(vertices)),
+			shader_(shader),
 			model_(std::move(model)),
 			parentModel_(parentModel)
 		{
@@ -65,7 +67,7 @@ namespace mesh {
 			glBindVertexArray(0); // Don't really need to "unbind" this 
 		}
 
-		void Draw(const Shader& shader, const glm::mat4& view, const glm::mat4& projection) const {
+		void Draw(const glm::mat4& view, const glm::mat4& projection) const {
 			// bind appropriate textures abiding by our provisory texture types
 			unsigned short diffuseCount = 1;
 			unsigned short specularCount = 1;
@@ -93,16 +95,16 @@ namespace mesh {
 				glActiveTexture(GL_TEXTURE0 + i);
 
 				// now set the sampler to the correct texture unit
-				glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), 0);
+				glUniform1i(glGetUniformLocation(shader_->ID, (name + number).c_str()), 0);
 
 				// and finally bind the texture
 				glBindTexture(GL_TEXTURE_2D, textures_[i].id);
 			}
 
-			shader.use();
+			shader_->use();
 			// precompute MVP
 			glm::mat4 MVP = projection * view * (*parentModel_) * model_;
-			shader.setMat4("MVP", MVP);
+			shader_->setMat4("MVP", MVP);
 			glBindVertexArray(VAO_);
 			glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
 		}
@@ -115,6 +117,7 @@ namespace mesh {
 		std::vector<Texture> textures_;
 		glm::mat4 model_;
 		std::shared_ptr<glm::mat4> parentModel_;
+		std::shared_ptr<Shader> shader_;
 
 	};
 

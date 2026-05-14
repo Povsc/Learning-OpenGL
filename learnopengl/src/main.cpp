@@ -1,7 +1,5 @@
-#include <glm/glm.hpp>
 #include <vector>
 
-#include "Shader.h"
 #include "Camera.h"
 #include "Model.h"
 #include "Window.h"
@@ -28,14 +26,14 @@ int main() {
 	// OpenGL global parameters
 	glEnable(GL_DEPTH_TEST);
 
-	// Shader setup
-	const Shader shaderProgram("shaders/texture.vert", "shaders/texture.frag");
+	// temporary way pre-create shaders per object-type
+	auto modelShader = std::make_shared<Shader>("shaders/texture.vert", "shaders/texture.frag");
 
 	// Test models -- TODO: eventually would be good to load models in background
 	std::vector<Model> models;
-	models.emplace_back("assets/gltf/real-time_bones_demo_phoenix_bird/", glm::vec3(-10, 5, 0), glm::vec3(0.01, 0.01, 0.01));
-	models.emplace_back("assets/gltf/dusty_old_bookshelf_free/");
-	models.emplace_back("assets/gltf/survival_guitar_backpack/", glm::vec3(-5, 0, 0), glm::vec3(0.01, 0.01, 0.01));
+	models.emplace_back("assets/gltf/real-time_bones_demo_phoenix_bird/", modelShader, glm::vec3(-10, 5, 0), glm::vec3(0.01, 0.01, 0.01));
+	models.emplace_back("assets/gltf/dusty_old_bookshelf_free/", modelShader);
+	models.emplace_back("assets/gltf/survival_guitar_backpack/", modelShader, glm::vec3(-5, 0, 0), glm::vec3(0.01, 0.01, 0.01));
 
 	while (!window.shouldClose()) {
 		window.processInput();
@@ -53,7 +51,7 @@ int main() {
 		models[2].updateRotation(glm::quat(time * 0.1, time * 0.1, 0, 0));*/
 
 		for (const auto& model : models) {
-			model.Draw(shaderProgram, view, projection);
+			model.Draw(view, projection);
 		}
 
 		window.swapBuffers();
