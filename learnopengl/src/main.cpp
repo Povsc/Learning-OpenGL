@@ -1,7 +1,7 @@
 #include <vector>
 
 #include "Camera.h"
-#include "Model.h"
+#include "objects/Model.h"
 #include "Window.h"
 
 
