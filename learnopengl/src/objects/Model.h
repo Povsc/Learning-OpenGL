@@ -65,14 +65,9 @@ private:
 		std::vector<float> flNor = getFloats(norAcc);
 		std::vector<Texture> textures = getTextures(matAcc);
 
-		// group components
-		std::vector<glm::vec3> positions = groupFloatsVec3(flPos);
-		std::vector<glm::vec2> texCoords = groupFloatsVec2(flTex);
-		std::vector<glm::vec3> normals = groupFloatsVec3(flNor);
-
 		// combine into Mesh
 		std::vector<unsigned int> indices = getIndices(indAcc);
-		std::vector<Vertex> vertices = mesh::assembleVertices(std::move(positions), std::move(texCoords), std::move(normals));
+		std::vector<Vertex> vertices = mesh::assembleVertices(std::move(flPos), std::move(flTex), std::move(flNor));
 
 		meshes_.emplace_back(std::move(vertices), std::move(indices), std::move(textures), shader_, model_, std::move(matrix));
 	}

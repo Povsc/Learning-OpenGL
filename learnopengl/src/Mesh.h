@@ -39,6 +39,16 @@ namespace mesh {
 		return vertices;
 	}
 
+	std::vector<Vertex> assembleVertices(
+		std::vector<float> flPos,
+		std::vector<float> flTex,
+		std::vector<float> flNor) {
+		return assembleVertices(
+			groupFloatsVec3(flPos),
+			groupFloatsVec2(flTex),
+			groupFloatsVec3(flNor));
+	}
+
 	// might want to make a subcass with texture
 	struct Texture {
 		unsigned int id; // understand what OpenGL is doing under the hood, how is this cached
