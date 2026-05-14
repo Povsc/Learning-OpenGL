@@ -10,7 +10,7 @@
 #include <stb_image.h>
 #include <filesystem>
 
-// TODO: move all model-loading logic to a different file
+// TODO: move all model-loading logic to a different class
 
 using json = nlohmann::json;
 using namespace mesh;
@@ -72,7 +72,7 @@ private:
 
 		// combine into Mesh
 		std::vector<unsigned int> indices = getIndices(indAcc);
-		std::vector<Vertex> vertices = assembleVertices(std::move(positions), std::move(texCoords), std::move(normals));
+		std::vector<Vertex> vertices = mesh::assembleVertices(std::move(positions), std::move(texCoords), std::move(normals));
 
 		meshes_.emplace_back(std::move(vertices), std::move(indices), std::move(textures), shader_, model_, std::move(matrix));
 	}
@@ -421,21 +421,6 @@ private:
 		return ID;
 	}
 
-	std::vector<Vertex> assembleVertices(std::vector<glm::vec3> position, std::vector<glm::vec2> TexCoords, std::vector<glm::vec3> normal) {
-		std::vector<Vertex> vertices{};
-
-		for (int i = 0; i < position.size(); i++) {
-			Vertex vertex{
-				.position = std::move(position[i]),
-				.texCoords = std::move(TexCoords[i]),
-				.normal = std::move(normal[i]) };
-			vertices.push_back(std::move(vertex));
-		}
-
-		// does NRVO happen here?
-		return vertices;
-	}
-
 	std::string readFile(const std::string file) {
 		std::ifstream is;
 
@@ -454,26 +439,6 @@ private:
 		catch (std::ifstream::failure e) {
 			throw std::exception("ERROR::MODEL_LOADING::FILE_NOT_SUCCESSFULLY_READ: file\n");
 		}
-	}
-
-	std::vector<glm::vec2> groupFloatsVec2(const std::vector<float>& floats) {
-		std::vector<glm::vec2> vectors;
-
-		for (int i = 0; i < floats.size(); i += 2) {
-			vectors.emplace_back(floats[i], floats[i + 1]);
-		}
-
-		return vectors;
-	}
-
-	std::vector<glm::vec3> groupFloatsVec3(const std::vector<float>& floats) {
-		std::vector<glm::vec3> vectors;
-
-		for (int i = 0; i < floats.size(); i += 3) {
-			vectors.emplace_back(floats[i], floats[i + 1], floats[i + 2]);
-		}
-
-		return vectors;
 	}
 
 	const std::string directory_;
