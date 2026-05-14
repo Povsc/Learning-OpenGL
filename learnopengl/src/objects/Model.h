@@ -39,6 +39,7 @@ public:
 	}
 
 	void Draw(const glm::mat4& view, const glm::mat4& projection) const override {
+		shader_->use();
 		for (const Mesh& mesh : meshes_) {
 			mesh.Draw(view, projection);
 		}

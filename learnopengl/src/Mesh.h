@@ -65,7 +65,7 @@ public:
 		std::vector<unsigned int>&& indices,
 		std::vector<Texture>&& textures,
 		std::shared_ptr<Shader> shader,
-		std::shared_ptr<glm::mat4> parentModel,
+		std::shared_ptr<glm::mat4> parentModel = std::make_shared<glm::mat4>(1.0f),
 		glm::mat4&& model = glm::mat4(1.0f)) :
 		vertices_(std::move(vertices)),
 		indices_(std::move(indices)),
@@ -135,7 +135,6 @@ public:
 			glBindTexture(GL_TEXTURE_2D, textures_[i].id);
 		}
 
-		shader_->use();
 		// precompute MVP
 		glm::mat4 MVP = projection * view * (*parentModel_) * model_;
 		shader_->setMat4("MVP", MVP);
