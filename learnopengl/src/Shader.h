@@ -11,6 +11,7 @@
 
 class Shader {
 public:
+	inline static unsigned int lastUsedID;
 	unsigned int ID;
 
 	Shader(const std::string& vertexPath, const std::string& fragmentPath) {
@@ -68,7 +69,11 @@ public:
 	}
 
 	void use() const {
+		if (lastUsedID == ID) {
+			return;
+		}
 		glUseProgram(ID);
+		lastUsedID = ID;
 	}
 
 	void setBool(const std::string& name, bool value) const {
