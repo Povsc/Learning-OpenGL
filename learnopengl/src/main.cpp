@@ -56,12 +56,12 @@ int main() {
 		//models[1].updateSacle(glm::vec3(fmod(time, 10), fmod(time * 1.5, 10), time));
 		//models[2].updateRotation(glm::quat(time * 0.1, time * 0.1, 0, 0));
 
-		for (const auto& model : models) {
-			model.Draw(view, projection);
-		}
-
 		for (const auto& light : lights) {
 			light.Draw(view, projection);
+		}
+
+		for (const auto& model : models) {
+			model.Draw(view, projection);
 		}
 
 		window.swapBuffers();

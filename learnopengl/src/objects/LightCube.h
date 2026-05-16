@@ -1,8 +1,8 @@
 #pragma once
-#include "Object.h"
+#include "Light.h"
 #include "../Mesh.h"
 
-class LightCube : public Object
+class LightCube : public Light
 {
 public:
 	LightCube(std::shared_ptr<Shader> shader,
@@ -10,15 +10,14 @@ public:
 		glm::vec3 pos = glm::vec3(0.),
 		glm::vec3 scale = glm::vec3(1.),
 		glm::quat rot = glm::quat(1., 0., 0., 0.)) :
-		Object(std::move(pos), std::move(scale), std::move(rot), shader),
-		color_(color),
+		Light(std::move(pos), std::move(scale), std::move(rot), shader, color),
 		mesh_(std::move(cubeMesh()))
 	{
 	}
 
 	void Draw(const glm::mat4& view, const glm::mat4& projection) const override {
 		shader_->use();
-		shader_->setVec3("color", color_);
+		shader_->setVec3("color", color);
 		mesh_.Draw(view, projection);
 	}
 
@@ -125,6 +124,5 @@ private:
 		return Mesh(std::move(vertices), std::move(indices), {}, shader_, model_);
 	}
 
-	glm::vec3 color_;
 	const Mesh mesh_;
 };
