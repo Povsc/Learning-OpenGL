@@ -6,6 +6,7 @@
 
 #include "Mesh.h"
 #include "Object.h"
+#include "Light.h"
 #include <iostream>
 #include <stb_image.h>
 #include <filesystem>
@@ -43,6 +44,25 @@ public:
 		for (const Mesh& mesh : meshes_) {
 			mesh.Draw(view, projection);
 		}
+	}
+
+	void Draw(const glm::mat4& view, const glm::mat4& projection, const std::vector<std::unique_ptr<Light>>& lights) const {
+		//shader_->use();
+		glm::vec3 ambientColor = glm::vec3(1.);
+		for (int i = 0; i < lights.size(); i++) {
+			const std::string lightPosName = "lightPos" + std::to_string(i);
+			const std::string lightColorName = "lightColor" + std::to_string(i);
+
+			shader_->setVec3(lightPosName, lights[i]->pos);
+			shader_->setVec3(lightColorName, lights[i]->color);
+
+			ambientColor += lights[i]->color;
+		}
+		// average of all sources for now
+		ambientColor /= glm::vec3((lights.size()));
+		shader_->setVec3("ambientColor", ambientColor);
+
+		Draw(view, projection);
 	}
 
 private:

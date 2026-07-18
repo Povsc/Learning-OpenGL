@@ -37,9 +37,9 @@ int main() {
 	models.emplace_back("assets/gltf/dusty_old_bookshelf_free/", modelShader);
 	models.emplace_back("assets/gltf/survival_guitar_backpack/", modelShader, glm::vec3(-5, 0, 0), glm::vec3(0.01, 0.01, 0.01));
 
-	std::vector<LightCube> lights;
-	lights.emplace_back(lightShader, glm::vec3(0.5, 0.8, 1.), glm::vec3(0., -2., 2.));
-	lights.emplace_back(lightShader, glm::vec3(0.9, 0.5, 1.), glm::vec3(0., 2., 2.));
+	std::vector<std::unique_ptr<Light>> lights;
+	lights.push_back(std::make_unique<LightCube>(lightShader, glm::vec3(0.5, 0.8, 1.), glm::vec3(0., -2., 2.)));
+	lights.push_back(std::make_unique<LightCube>(lightShader, glm::vec3(0.9, 0.5, 1.), glm::vec3(0., 2., 2.)));
 
 	while (!window.shouldClose()) {
 		window.processInput();
@@ -57,11 +57,11 @@ int main() {
 		//models[2].updateRotation(glm::quat(time * 0.1, time * 0.1, 0, 0));
 
 		for (const auto& light : lights) {
-			light.Draw(view, projection);
+			light->Draw(view, projection);
 		}
 
 		for (const auto& model : models) {
-			model.Draw(view, projection);
+			model.Draw(view, projection, lights);
 		}
 
 		window.swapBuffers();

@@ -10,7 +10,7 @@ public:
 		glm::vec3 pos = glm::vec3(0.),
 		glm::vec3 scale = glm::vec3(1.),
 		glm::quat rot = glm::quat(1., 0., 0., 0.)) :
-		Light(std::move(pos), std::move(scale), std::move(rot), shader, color),
+		Light(shader, color, std::move(pos), std::move(scale), std::move(rot)),
 		mesh_(std::move(cubeMesh()))
 	{
 	}
