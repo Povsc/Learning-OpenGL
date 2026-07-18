@@ -136,8 +136,11 @@ public:
 		}
 
 		// precompute MVP
-		glm::mat4 MVP = projection * view * (*parentModel_) * model_;
+		const auto model = (*parentModel_) * model_;
+		glm::mat4 MVP = projection * view * model;
 		shader_->setMat4("MVP", MVP);
+		// also need model matrix -- should we still precompute MVP?
+		shader_->setMat4("model", model);
 		glBindVertexArray(VAO_);
 		glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
 	}
