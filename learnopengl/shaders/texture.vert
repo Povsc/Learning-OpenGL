@@ -15,6 +15,11 @@ void main()
 {
     gl_Position = MVP * vec4(aPos, 1.0);
     UV = aTexCoord;
-    Normal = -1 * aNormal; // TODO: glTF normals seem to be flipped
+
+    // This is somethinng to do with how tFragPos is calculated
+    // i.e. the scaling implicitly happening when multiplying by model
+    // TODO: fully uderstand this
+    mat3 normalMatrix = transpose(inverse(mat3(model)));
+    Normal = normalMatrix * -aNormal;
     FragPos = vec3(model * vec4(aPos, 1.));
 }

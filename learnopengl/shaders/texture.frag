@@ -20,7 +20,7 @@ void main()
 {
     // ambient lighting
     // TODO: it's precomputed now, but do we want it to be calculated here?
-    vec3 ambient = ambientColor * /*ambientColorIntensity*/ 0.1;
+    vec3 ambient = ambientColor * /*ambientColorIntensity*/ 0.01;
 
     // diffuse lighting
     vec3 norm = normalize(Normal);
