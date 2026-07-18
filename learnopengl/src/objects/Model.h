@@ -58,7 +58,7 @@ public:
 			const std::string lightPosName = "lightPos" + std::to_string(i);
 			const std::string lightColorName = "lightColor" + std::to_string(i);
 
-			shader_->setVec3(lightPosName, lights[i]->pos);
+			shader_->setVec3(lightPosName, lights[i]->getPosition());
 			shader_->setVec3(lightColorName, lights[i]->color);
 
 			ambientColor += lights[i]->color;

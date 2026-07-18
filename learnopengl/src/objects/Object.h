@@ -11,9 +11,9 @@ public:
 		glm::vec3 scale = glm::vec3(1.),
 		glm::quat rot = glm::quat(1., 0., 0., 0.),
 		std::shared_ptr<Shader> shader = nullptr) :
-		pos(std::move(pos)),
-		scale(std::move(scale)),
-		rot(std::move(rot)),
+		pos_(std::move(pos)),
+		scale_(std::move(scale)),
+		rot_(std::move(rot)),
 		model_(std::make_shared<glm::mat4>(1.0)),
 		shader_(shader)
 	{
@@ -24,45 +24,45 @@ public:
 	virtual void Draw(const glm::mat4& view, const glm::mat4& projection) const = 0;
 
 	void updatePosition(glm::vec3 pos) {
-		pos = pos;
+		pos_ = pos;
 		updateModel();
 	}
 
 	void updateSacle(glm::vec3 scale) {
-		scale = scale;
+		scale_ = scale;
 		updateModel();
 	}
 
 	void updateRotation(glm::quat rot) {
-		rot = rot;
+		rot_ = rot;
 		updateModel();
 	}
 
 	glm::vec3 getPosition() {
-		return pos;
+		return pos_;
 	}
 
 	glm::vec3 getScale() {
-		return scale;
+		return scale_;
 	}
 
 	glm::quat getRotation() {
-		return rot;
+		return rot_;
 	}
-
-	glm::vec3 pos;
-	glm::vec3 scale;
-	glm::quat rot;
 
 protected:
 
 	void updateModel() {
-		auto translationMat = glm::translate(glm::mat4(1.0f), pos);
-		auto rotationMat = glm::mat4_cast(rot);
-		auto scaleMat = glm::scale(glm::mat4(1.0f), scale);
+		auto translationMat = glm::translate(glm::mat4(1.0f), pos_);
+		auto rotationMat = glm::mat4_cast(rot_);
+		auto scaleMat = glm::scale(glm::mat4(1.0f), scale_);
 
 		*model_ = translationMat * rotationMat * scaleMat;
 	}
+
+	glm::vec3 pos_;
+	glm::vec3 scale_;
+	glm::quat rot_;
 
 	std::shared_ptr<glm::mat4> model_;
 	std::shared_ptr<Shader> shader_;
