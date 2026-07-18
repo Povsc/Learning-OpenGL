@@ -41,6 +41,11 @@ public:
 
 	void Draw(const glm::mat4& view, const glm::mat4& projection) const override {
 		shader_->use();
+
+		// compute viewPos (i.e. camera pos)
+		glm::mat4 inverseView = glm::inverse(view);
+		shader_->setVec3("viewPos", glm::vec3(inverseView[3]));
+
 		for (const Mesh& mesh : meshes_) {
 			mesh.Draw(view, projection);
 		}

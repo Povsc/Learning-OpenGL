@@ -61,17 +61,17 @@ public:
 			glfwSetWindowShouldClose(window_, true);
 
 		if (glfwGetKey(window_, GLFW_KEY_W) == GLFW_PRESS)
-			camera_->ProcessKeyboard(Movement::FORWARD, deltaTime);
+			camera_->processKeyboard(Movement::FORWARD, deltaTime);
 		if (glfwGetKey(window_, GLFW_KEY_S) == GLFW_PRESS)
-			camera_->ProcessKeyboard(Movement::BACKWARD, deltaTime);
+			camera_->processKeyboard(Movement::BACKWARD, deltaTime);
 		if (glfwGetKey(window_, GLFW_KEY_Q) == GLFW_PRESS)
-			camera_->ProcessKeyboard(Movement::DOWN, deltaTime);
+			camera_->processKeyboard(Movement::DOWN, deltaTime);
 		if (glfwGetKey(window_, GLFW_KEY_E) == GLFW_PRESS)
-			camera_->ProcessKeyboard(Movement::UP, deltaTime);
+			camera_->processKeyboard(Movement::UP, deltaTime);
 		if (glfwGetKey(window_, GLFW_KEY_A) == GLFW_PRESS)
-			camera_->ProcessKeyboard(Movement::LEFT, deltaTime);
+			camera_->processKeyboard(Movement::LEFT, deltaTime);
 		if (glfwGetKey(window_, GLFW_KEY_D) == GLFW_PRESS)
-			camera_->ProcessKeyboard(Movement::RIGHT, deltaTime);
+			camera_->processKeyboard(Movement::RIGHT, deltaTime);
 
 		// TODO: what was this about again?
 		if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
@@ -142,7 +142,7 @@ private:
 			float yOffset = (instance->lastY_ - ypos);
 			instance->lastX_ = xpos;
 			instance->lastY_ = ypos;
-			instance->camera_->ProcessMouseMovement(xOffset, yOffset);
+			instance->camera_->processMouseMovement(xOffset, yOffset);
 		}
 	}
 
@@ -150,7 +150,7 @@ private:
 		// get member instance (i.e. this) from the GLFWwindow object
 		auto* instance = static_cast<Window*>(glfwGetWindowUserPointer(window));
 		if (instance) {
-			instance->camera_->ProcessMouseScroll(yoffset);
+			instance->camera_->processMouseScroll(yoffset);
 		}
 	}
 

@@ -18,7 +18,8 @@ void main()
 
     // This is somethinng to do with how tFragPos is calculated
     // i.e. the scaling implicitly happening when multiplying by model
-    // TODO: fully uderstand this
+    // TODO: fully uderstand this -- 
+    // https://www.lighthouse3d.com/tutorials/glsl-12-tutorial/the-normal-matrix/
     mat3 normalMatrix = transpose(inverse(mat3(model)));
     Normal = normalMatrix * -aNormal;
     FragPos = vec3(model * vec4(aPos, 1.));

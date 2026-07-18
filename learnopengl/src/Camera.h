@@ -45,11 +45,15 @@ public:
 		updateCameraVectors();
 	}
 
-	glm::mat4 GetViewMatrix() {
+	glm::mat4 getViewMatrix() const {
 		return glm::lookAt(position_, front_ + position_, up_);
 	}
 
-	void ProcessKeyboard(Movement direction, float deltaTime) {
+	glm::vec3 getViewPos() const {
+		return position_;
+	}
+
+	void processKeyboard(Movement direction, float deltaTime) {
 		float camSpeed = movementSpeed_ * deltaTime;
 		if (direction == Movement::FORWARD)
 			position_ += camSpeed * front_;
@@ -65,7 +69,7 @@ public:
 			position_ -= camSpeed * up_;
 	}
 
-	void ProcessMouseMovement(float xoffset, float yoffset, bool constraintPitch = true) {
+	void processMouseMovement(float xoffset, float yoffset, bool constraintPitch = true) {
 		xoffset *= mouseSensitivity_;
 		yoffset *= mouseSensitivity_;
 		yaw_ += xoffset;
@@ -80,7 +84,7 @@ public:
 		updateCameraVectors();
 	}
 
-	void ProcessMouseScroll(float yoffset) {
+	void processMouseScroll(float yoffset) {
 		movementSpeed_ += yoffset;
 		if (movementSpeed_ > SPEED_MAX)
 			movementSpeed_ = SPEED_MAX;

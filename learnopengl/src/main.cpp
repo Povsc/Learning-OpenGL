@@ -48,7 +48,7 @@ int main() {
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::mat4 view = camera->GetViewMatrix();
+		glm::mat4 view = camera->getViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), float(window.width) / float(window.height), 0.10f, 10000.0f);
 
 		//float time = window.getTime();
