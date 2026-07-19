@@ -22,7 +22,7 @@ void main()
 {
     float ambientColorIntensity = 0.01;
     float specularStrength = 0.5;
-    int shininess = 30;
+    int shininess = 32;
 
     // ambient lighting
     // TODO: it's precomputed now, but do we want it to be calculated here?
@@ -30,8 +30,8 @@ void main()
 
     // diffuse lighting
     vec3 norm = normalize(Normal);
-    vec3 lightDir0 = normalize(FragPos - lightPos0);
-    vec3 lightDir1 = normalize(FragPos - lightPos1);
+    vec3 lightDir0 = normalize(lightPos0 - FragPos);
+    vec3 lightDir1 = normalize(lightPos1 - FragPos);
 
     vec3 diff0 = max(dot(norm, lightDir0), 0.) * lightColor0;
     vec3 diff1 = max(dot(norm, lightDir1), 0.) * lightColor1;
@@ -47,7 +47,7 @@ void main()
     float spec1 = pow(max(dot(norm, halfwayDir1), 0.), shininess);
     vec3 specular1 = lightColor1 * spec1;
 
-    vec3 light = ambient + diff1 + diff0 + specular0 + specular1;
+    vec3 light = ambient + diff0 + diff1 + specular0 + specular1;
 
     vec3 textureColor = mix(texture(diffuse1, UV).rgb, texture(diffuse0, UV).rgb, 0.6);
     FragColor = vec4((light * textureColor), 1.);
