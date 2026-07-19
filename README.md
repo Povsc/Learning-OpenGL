@@ -10,8 +10,8 @@ Repo for tracking progress through basics of OpenGL and graphics programming.
 | <img src="https://github.com/Povsc/learnopengl/assets/73599216/4be0f11b-ca06-4e4e-bd79-f41a59ad2880" width="300" heigh="450"> | <img src="https://github.com/Povsc/learnopengl/assets/73599216/229d32cf-1080-4954-8c15-35c4237f0db9" width="300" heigh="450"> | <img src="https://github.com/Povsc/learnopengl/assets/73599216/e1f3313e-f52b-4b9e-a3bc-ad77eba92139" width="300" heigh="450"> |
 | :--------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------: |
 | Hello Triangle | Camera movement and "animation" | glTF2 Model-loading (geometry only) |
-| <img src="https://github.com/Povsc/Learning-OpenGL/assets/73599216/bda762ca-5ac5-4de3-adc7-3db12e328858" width="300" heigh="450"> |  |   |
-| glTF2 Model-loading with textures |   |   |
+| <img src="https://github.com/Povsc/Learning-OpenGL/assets/73599216/bda762ca-5ac5-4de3-adc7-3db12e328858" width="300" heigh="450"> | <img width="400" height="300" alt="Screen Recording 2026-07-18 215001" src="https://github.com/user-attachments/assets/5e06e5a8-f64a-4650-a9b5-a20e54731bd4" /> |   |
+| glTF2 Model-loading with textures | Blinn Phong lighting  |   |
 
 ----
 <!-- ROADMAP -->
